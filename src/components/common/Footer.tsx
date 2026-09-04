@@ -141,52 +141,52 @@ export const Footer: React.FC = () => {
             </h3>
             <ul className="space-y-2 text-xs text-gray-400">
               <li>
-                <button
-                  onClick={() => navigateToPage('about-us')}
-                  className="hover:text-red-400 transition-colors hover:underline"
+                <a
+                  href="/about.html"
+                  className="hover:text-red-400 transition-colors hover:underline block py-0.5"
                 >
                   আমাদের সম্পর্কে
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => navigateToPage('editorial-policy')}
-                  className="hover:text-red-400 transition-colors hover:underline"
+                <a
+                  href="/editorial-policy.html"
+                  className="hover:text-red-400 transition-colors hover:underline block py-0.5"
                 >
-                  সম্পাদকীয় নীতিমালা
-                </button>
+                  সম্পাদকীয় নীতিমালা
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => navigateToPage('correction-policy')}
-                  className="hover:text-red-400 transition-colors hover:underline"
+                <a
+                  href="/corrections-policy.html"
+                  className="hover:text-red-400 transition-colors hover:underline block py-0.5"
                 >
                   সংশোধনী নীতি
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => navigateToPage('privacy-policy')}
-                  className="hover:text-red-400 transition-colors hover:underline"
+                <a
+                  href="/privacy-policy.html"
+                  className="hover:text-red-400 transition-colors hover:underline block py-0.5"
                 >
                   প্রাইভেসি পলিসি
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => navigateToPage('terms')}
-                  className="hover:text-red-400 transition-colors hover:underline"
+                <a
+                  href="/terms-of-use.html"
+                  className="hover:text-red-400 transition-colors hover:underline block py-0.5"
                 >
                   ব্যবহারের শর্তাবলী
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => navigateToPage('contact')}
-                  className="hover:text-red-400 transition-colors hover:underline"
+                <a
+                  href="/contact.html"
+                  className="hover:text-red-400 transition-colors hover:underline block py-0.5"
                 >
                   যোগাযোগ
-                </button>
+                </a>
               </li>
             </ul>
           </div>

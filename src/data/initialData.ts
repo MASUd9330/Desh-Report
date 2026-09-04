@@ -640,7 +640,7 @@ export const initialSiteSettings: SiteSettings = {
   youtubeUrl: 'https://youtube.com/@DeshReportBD',
   xUrl: 'https://twitter.com/DeshReport',
   whatsappNumber: '+8801711000000',
-  googleAnalyticsId: 'G-DESHREPORT26',
+  googleAnalyticsId: 'G-D8F30NEM7X',
   googleSearchConsoleMeta: 'google-site-verification=deshreport_gsc_token_2026',
   copyrightBn: '© ২০২৬ DeshReport. সর্বস্বত্ব সংরক্ষিত। অনুমতি ছাড়া যেকোনো প্রতিবেদন পুনঃপ্রকাশ সম্পূর্ণ নিষিদ্ধ।',
   timezone: 'Asia/Dhaka (GMT+6)',

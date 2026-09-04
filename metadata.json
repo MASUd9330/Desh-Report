@@ -2,5 +2,7 @@
   "name": "DeshReport",
   "description": "দেশের খবর, সবার আগে - Premium Bangladeshi Digital News Portal & Editorial CMS",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
