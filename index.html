@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="bn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DeshReport | দেশের খবর, সবার আগে - Bangladesh, Reported First</title>
+    <meta name="description" content="DeshReport - বাংলাদেশের শীর্ষস্থানীয় ডিজিটাল সংবাদপত্র ও সংবাদ পোর্টাল। জাতীয়, রাজনীতি, আন্তর্জাতিক, অর্থনীতি, প্রযুক্তি ও খেলার নির্ভরযোগ্য খবর সবার আগে।" />
+    <meta property="og:title" content="DeshReport | দেশের খবর, সবার আগে" />
+    <meta property="og:description" content="বাংলাদেশ ও বিশ্বের তাজা খবর, গভীর অনুসন্ধান ও বিশ্বাসযোগ্য সম্পাদকীয় প্রতিবেদন।" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="DeshReport" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Window.fetch getter/setter compatibility shim for sandbox / iframe environments -->
+    <script>
+      (function() {
+        try {
+          var nativeFetch = window.fetch;
+          var customFetch = nativeFetch;
+          Object.defineProperty(window, 'fetch', {
+            get: function() {
+              return customFetch || nativeFetch;
+            },
+            set: function(fn) {
+              customFetch = fn;
+            },
+            configurable: true,
+            enumerable: true
+          });
+        } catch (e1) {
+          try {
+            if (typeof Window !== 'undefined' && Window.prototype) {
+              var protoFetch = Window.prototype.fetch;
+              var customProtoFetch = protoFetch;
+              Object.defineProperty(Window.prototype, 'fetch', {
+                get: function() {
+                  return customProtoFetch || protoFetch;
+                },
+                set: function(fn) {
+                  customProtoFetch = fn;
+                },
+                configurable: true,
+                enumerable: true
+              });
+            }
+          } catch (e2) {}
+        }
+
+        // Global uncaught error filter for any external tool/extension attempting to set read-only fetch
+        window.addEventListener('error', function(event) {
+          if (event && event.message && event.message.indexOf('fetch') !== -1 && event.message.indexOf('getter') !== -1) {
+            event.preventDefault();
+            if (event.stopImmediatePropagation) {
+              event.stopImmediatePropagation();
+            }
+            return true;
+          }
+        });
+      })();
+    </script>
+    
+    <!-- Bangla Typography Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Noto+Serif+Bengali:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-[#f8f9fa] text-[#111827] antialiased selection:bg-[#c00612] selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
