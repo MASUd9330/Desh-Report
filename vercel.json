@@ -1,0 +1,15 @@
+{
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/about", "destination": "/about.html" },
+    { "source": "/contact", "destination": "/contact.html" },
+    { "source": "/corrections-policy", "destination": "/corrections-policy.html" },
+    { "source": "/editorial-policy", "destination": "/editorial-policy.html" },
+    { "source": "/privacy-policy", "destination": "/privacy-policy.html" },
+    { "source": "/terms-of-use", "destination": "/terms-of-use.html" },
+    { "source": "/sitemap", "destination": "/sitemap.html" },
+    { "source": "/((?!assets/|.*\\..*).*)", "destination": "/index.html" }
+  ]
+}

@@ -41,7 +41,7 @@ export const AdminSettings: React.FC = () => {
   };
 
   const generateAndDownloadLiveSitemap = () => {
-    const baseUrl = 'https://deshreport.netlify.app';
+    const baseUrl = 'https://deshreport.vercel.app';
     const today = new Date().toISOString().split('T')[0];
 
     const categoryEntries = categories.map(cat => `  <url>

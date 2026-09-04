@@ -3,6 +3,41 @@
   publish = "dist"
 
 [[redirects]]
+  from = "/about"
+  to = "/about.html"
+  status = 200
+
+[[redirects]]
+  from = "/contact"
+  to = "/contact.html"
+  status = 200
+
+[[redirects]]
+  from = "/corrections-policy"
+  to = "/corrections-policy.html"
+  status = 200
+
+[[redirects]]
+  from = "/editorial-policy"
+  to = "/editorial-policy.html"
+  status = 200
+
+[[redirects]]
+  from = "/privacy-policy"
+  to = "/privacy-policy.html"
+  status = 200
+
+[[redirects]]
+  from = "/terms-of-use"
+  to = "/terms-of-use.html"
+  status = 200
+
+[[redirects]]
+  from = "/sitemap"
+  to = "/sitemap.html"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
