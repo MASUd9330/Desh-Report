@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: https://deshreport.netlify.app/sitemap.xml
+Sitemap: https://deshreport.netlify.app/sitemap-news.xml

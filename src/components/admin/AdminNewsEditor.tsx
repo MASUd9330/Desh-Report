@@ -15,8 +15,12 @@ import {
   Heading3,
   Quote,
   List,
-  AlertCircle
+  AlertCircle,
+  Send,
+  Share2,
+  RefreshCw
 } from 'lucide-react';
+import { autoPublishArticle, getStoredSocialConfig } from '../../services/socialPublisher';
 
 export const AdminNewsEditor: React.FC = () => {
   const {
@@ -69,6 +73,12 @@ export const AdminNewsEditor: React.FC = () => {
   const [notification, setNotification] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Social Auto-Post Options (Telegram & Facebook with Image)
+  const [autoPostTelegram, setAutoPostTelegram] = useState(true);
+  const [autoPostFacebook, setAutoPostFacebook] = useState(true);
+  const [socialPublishing, setSocialPublishing] = useState(false);
+  const [socialNotice, setSocialNotice] = useState<string | null>(null);
+
   useEffect(() => {
     if (!existingArticle && title) {
       setSlug(generateSlug(title));
@@ -80,6 +90,33 @@ export const AdminNewsEditor: React.FC = () => {
       localStorage.removeItem('deshreport_editing_id');
     } catch (_) {}
     setAdminSection('news', 'all');
+  };
+
+  const triggerSocialBroadcast = async (art: { title: string; summary?: string; slug: string; featuredImage?: string }) => {
+    if (!autoPostTelegram && !autoPostFacebook) return;
+    setSocialPublishing(true);
+    try {
+      const stored = getStoredSocialConfig();
+      const runConfig = {
+        ...stored,
+        telegramEnabled: autoPostTelegram && stored.telegramEnabled,
+        facebookEnabled: autoPostFacebook && stored.facebookEnabled
+      };
+      const results = await autoPublishArticle(art, runConfig);
+      const successful = results.filter(r => r.success).map(r => (r.platform === 'telegram' ? 'টেলিগ্রাম' : 'ফেসবুক'));
+      const failed = results.filter(r => !r.success);
+
+      if (successful.length > 0) {
+        setSocialNotice(`ছবিসহ সফলভাবে ${successful.join(' এবং ')} চ্যানেলে পোস্ট সম্প্রচারিত হয়েছে!`);
+      } else if (failed.length > 0) {
+        setSocialNotice(`সোশ্যাল পোস্টের ত্রুটি: ${failed[0].message}`);
+      }
+    } catch (e: any) {
+      setSocialNotice(`সোশ্যাল সংযোগ ত্রুটি: ${e?.message || 'সমস্যা হয়েছে'}`);
+    } finally {
+      setSocialPublishing(false);
+      setTimeout(() => setSocialNotice(null), 6000);
+    }
   };
 
   const handleSave = (saveStatus?: NewsStatus) => {
@@ -95,9 +132,10 @@ export const AdminNewsEditor: React.FC = () => {
       .map(t => t.trim())
       .filter(Boolean);
 
+    const targetSlug = slug || generateSlug(title);
     const articleData: Partial<Article> = {
       title: title.trim(),
-      slug: slug || generateSlug(title),
+      slug: targetSlug,
       subtitle: subtitle.trim(),
       content,
       summary: summary.trim() || content.slice(0, 160) + '...',
@@ -121,7 +159,7 @@ export const AdminNewsEditor: React.FC = () => {
       seoTitle: seoTitle || `${title} | DeshReport`,
       metaDescription: metaDescription || summary || title,
       focusKeyword: focusKeyword.trim(),
-      canonicalUrl: canonicalUrl || `https://deshreport.com/article/${slug || generateSlug(title)}`
+      canonicalUrl: canonicalUrl || `https://deshreport.com/article/${targetSlug}`
     };
 
     if (existingArticle) {
@@ -133,6 +171,16 @@ export const AdminNewsEditor: React.FC = () => {
       try {
         localStorage.setItem('deshreport_editing_id', created.id);
       } catch (_) {}
+    }
+
+    // Auto-Post to Telegram and Facebook if published
+    if (currentStatus === 'published' && (autoPostTelegram || autoPostFacebook)) {
+      triggerSocialBroadcast({
+        title: articleData.title!,
+        summary: articleData.summary,
+        slug: targetSlug,
+        featuredImage: articleData.featuredImage
+      });
     }
 
     setTimeout(() => {
@@ -210,6 +258,13 @@ export const AdminNewsEditor: React.FC = () => {
         <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-500 text-emerald-800 dark:text-emerald-300 rounded-lg text-xs font-medium flex items-center gap-2 animate-fade-in">
           <Check className="w-4 h-4 text-emerald-600 shrink-0" />
           <span>{notification}</span>
+        </div>
+      )}
+
+      {socialNotice && (
+        <div className="p-3.5 bg-sky-50 dark:bg-sky-950/60 border border-sky-500 text-sky-800 dark:text-sky-300 rounded-lg text-xs font-medium flex items-center gap-2 animate-fade-in">
+          <Send className="w-4 h-4 text-sky-600 shrink-0" />
+          <span>{socialNotice}</span>
         </div>
       )}
 
@@ -586,6 +641,69 @@ export const AdminNewsEditor: React.FC = () => {
                 </span>
               </label>
             </div>
+          </div>
+
+          {/* Social Auto-Post Options (Telegram & Facebook with Image) */}
+          <div className="bg-white dark:bg-slate-900 border border-sky-200 dark:border-sky-900/50 rounded-xl p-5 shadow-xs space-y-3">
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-100 dark:border-slate-800">
+              <Share2 className="w-4 h-4 text-sky-600" />
+              <h3 className="font-bold text-xs text-gray-900 dark:text-white">
+                অটো সোশ্যাল সম্প্রচার (ছবিসহ)
+              </h3>
+            </div>
+
+            <p className="text-[11px] text-gray-500">
+              সংবাদটি পাবলিশ হওয়ার সাথে সাথে স্বয়ংক্রিয়ভাবে ছবি ও লিংকসহ সোশ্যাল চ্যানেলে চলে যাবে:
+            </p>
+
+            <div className="space-y-2 text-xs">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={autoPostTelegram}
+                  onChange={e => setAutoPostTelegram(e.target.checked)}
+                  className="rounded text-sky-500 focus:ring-sky-400"
+                />
+                <span className="flex items-center gap-1.5 font-medium text-gray-800 dark:text-gray-200">
+                  <Send className="w-3.5 h-3.5 text-sky-500" />
+                  <span>টেলিগ্রামে ছবিসহ পোস্ট</span>
+                </span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={autoPostFacebook}
+                  onChange={e => setAutoPostFacebook(e.target.checked)}
+                  className="rounded text-blue-600 focus:ring-blue-500"
+                />
+                <span className="flex items-center gap-1.5 font-medium text-gray-800 dark:text-gray-200">
+                  <Facebook className="w-3.5 h-3.5 text-blue-600" />
+                  <span>ফেসবুকে ছবিসহ পোস্ট</span>
+                </span>
+              </label>
+            </div>
+
+            <button
+              type="button"
+              disabled={socialPublishing || !title.trim()}
+              onClick={() =>
+                triggerSocialBroadcast({
+                  title: title.trim(),
+                  summary: summary.trim() || content.slice(0, 160) + '...',
+                  slug: slug || generateSlug(title),
+                  featuredImage: featuredImage.trim()
+                })
+              }
+              className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-linear-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 disabled:opacity-50 text-white font-bold rounded-lg text-xs shadow-xs cursor-pointer transition-all mt-1"
+            >
+              {socialPublishing ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Send className="w-3.5 h-3.5" />
+              )}
+              <span>{socialPublishing ? 'ছবিসহ পাঠানো হচ্ছে...' : 'ছবিসহ এখনই সোশ্যালে পোস্ট করুন'}</span>
+            </button>
           </div>
 
           {/* Author & Tags */}

@@ -21,7 +21,9 @@ export const AdminSettings: React.FC = () => {
   const [contactPhone, setContactPhone] = useState(siteSettings?.contactPhone || '+880 1712-345678');
   const [contactAddress, setContactAddress] = useState(siteSettings?.contactAddress || 'Karwan Bazar, Dhaka-1215, Bangladesh');
   const [googleAnalyticsId, setGoogleAnalyticsId] = useState(siteSettings?.googleAnalyticsId || '');
-  const [googleSearchConsoleCode, setGoogleSearchConsoleCode] = useState(siteSettings?.googleSearchConsoleCode || '');
+  const [googleSearchConsoleCode, setGoogleSearchConsoleCode] = useState(
+    siteSettings?.googleSearchConsoleMeta || siteSettings?.googleSearchConsoleCode || ''
+  );
 
   const [saved, setSaved] = useState(false);
   const [importNotice, setImportNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -37,7 +39,8 @@ export const AdminSettings: React.FC = () => {
       contactPhone,
       contactAddress,
       googleAnalyticsId,
-      googleSearchConsoleCode
+      googleSearchConsoleCode,
+      googleSearchConsoleMeta: googleSearchConsoleCode
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);

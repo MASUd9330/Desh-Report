@@ -171,6 +171,10 @@ export interface SiteSettings {
   whatsappNumber: string;
   googleAnalyticsId: string;
   googleSearchConsoleMeta: string;
+  googleSearchConsoleCode?: string;
+  tagline?: string;
+  contactAddress?: string;
+  description?: string;
   copyrightBn: string;
   timezone: string;
   defaultLanguage: 'bn' | 'en';
