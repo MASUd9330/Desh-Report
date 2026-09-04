@@ -6,6 +6,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   role: UserRole;
   avatar: string;
   title: string;
@@ -162,6 +163,7 @@ export interface SiteSettings {
   contactEmail: string;
   contactPhone: string;
   address: string;
+  editorName?: string;
   facebookUrl: string;
   telegramUrl: string;
   youtubeUrl: string;

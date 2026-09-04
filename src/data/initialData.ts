@@ -17,12 +17,24 @@ export const initialCategories: Category[] = [
 
 export const initialUsers: User[] = [
   {
+    id: 'usr-admin-masud',
+    name: 'মোহাম্মদ মাসুদ রানা',
+    email: 'masud.here9330@gmail.com',
+    phone: '01581226134',
+    role: 'super_admin',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
+    title: 'সম্পাদক ও প্রকাশক (Editor & Publisher)',
+    articlesCount: 88,
+    status: 'active'
+  },
+  {
     id: 'usr-1',
     name: 'তানভীর আহমেদ',
     email: 'tanvir@deshreport.com',
+    phone: '01711000001',
     role: 'super_admin',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    title: 'প্রধান সম্পাদক (Editor-in-Chief)',
+    title: 'প্রধান নির্বাহী সম্পাদক (Executive Editor)',
     articlesCount: 64,
     status: 'active'
   },
@@ -81,6 +93,51 @@ export const initialBreakingNews: BreakingNewsItem[] = [
     id: 'brk-3',
     title: 'টি-টোয়েন্টি সিরিজে আফগানিস্তানকে হোয়াইটওয়াশ করল বাংলাদেশ টাইগার্স',
     link: '/article/bangladesh-cricket-whitewash-afghanistan',
+    priority: 'normal',
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    displayLocations: ['homepage', 'category', 'article']
+  },
+  {
+    id: 'brk-4',
+    title: 'মতিঝিল থেকে কমলাপুর মেট্রোরেলের পরীক্ষামূলক চলাচল শুরু হবে চলতি মাসেই',
+    link: '/article/dhaka-metro-rail-kamalapur-extension-timeline',
+    priority: 'urgent',
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    displayLocations: ['homepage', 'category', 'article']
+  },
+  {
+    id: 'brk-5',
+    title: 'রমজানে নিত্যপণ্যের দাম নিয়ন্ত্রণে জেলাভিত্তিক বিশেষ টাস্কফোর্স গঠনের কঠোর নির্দেশ',
+    link: '/article/commerce-ministry-taskforce-commodity-price-ramadan',
+    priority: 'high',
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    displayLocations: ['homepage', 'category', 'article']
+  },
+  {
+    id: 'brk-6',
+    title: 'চট্টগ্রাম বন্দরে আধুনিক স্বয়ংক্রিয় স্ক্যানার স্থাপন, পণ্য খালাসে রেকর্ড গতি',
+    link: '/article/chattogram-port-automation-terminal',
+    priority: 'normal',
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    displayLocations: ['homepage', 'category', 'article']
+  },
+  {
+    id: 'brk-7',
+    title: 'বিশ্ববাজারে অপরিশোধিত জ্বালানি তেলের দামে বড় পতন, মূল্যস্ফীতি কমার আশা',
+    link: '/article/global-crude-oil-prices-drop',
+    priority: 'high',
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    displayLocations: ['homepage', 'category', 'article']
+  },
+  {
+    id: 'brk-8',
+    title: 'স্মার্ট বাংলাদেশ বিনির্মাণে এআই প্রযুক্তির পাইলট প্রকল্প চালু করল তথ্যপ্রযুক্তি বিভাগ',
+    link: '/article/bangladesh-ai-governance-pilot-initiative',
     priority: 'normal',
     isActive: true,
     createdAt: new Date().toISOString(),
@@ -576,7 +633,8 @@ export const initialSiteSettings: SiteSettings = {
   siteDescription: 'DeshReport - বাংলাদেশের দ্রুততম ও বিশ্বাসযোগ্য আধুনিক ডিজিটাল সংবাদ পোর্টাল। নিরপেক্ষ সাংবাদিকতা, তাৎক্ষণিক ব্রেকিং নিউজ ও গভীর অনুসন্ধানী প্রতিবেদন।',
   contactEmail: 'editor@deshreport.com',
   contactPhone: '+880 1711-000000',
-  address: 'লেভেল ৪, প্রগতি টাওয়ার, পান্থপথ, ঢাকা-১২০৫, বাংলাদেশ',
+  address: 'খিলগাঁও, ঢাকা - ১২১৯',
+  editorName: 'মোহাম্মদ মাসুদ রানা',
   facebookUrl: 'https://facebook.com/DeshReportOfficial',
   telegramUrl: 'https://t.me/DeshReportLive',
   youtubeUrl: 'https://youtube.com/@DeshReportBD',
@@ -647,7 +705,8 @@ export const initialPages: PageItem[] = [
     status: 'published',
     updatedAt: '২০২৬-০১-২৫',
     contentBn: `**প্রধান কার্যালয়:**
-লেভেল ৪, প্রগতি টাওয়ার, পান্থপথ, ঢাকা-১২০৫, বাংলাদেশ
+খিলগাঁও, ঢাকা - ১২১৯, বাংলাদেশ
+সম্পাদক ও প্রকাশক: মোহাম্মদ মাসুদ রানা
 ইমেইল: news@deshreport.com, editor@deshreport.com
 ফোন: +৮৮০ ২ ৯৯৮৮৭৭৬৬, মোবাইল: +৮৮০ ১৭১১ ০০০০০০
 বিজ্ঞাপন বিভাগ: ads@deshreport.com`

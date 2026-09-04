@@ -15,11 +15,11 @@ export const CategoryPageView: React.FC = () => {
 
   const [sortBy, setSortBy] = useState<'latest' | 'popular'>('latest');
 
-  const category = categories.find(c => c.slug === activeCategorySlug) || categories[0];
+  const category = categories.find(c => c.slug === activeCategorySlug || c.id === activeCategorySlug) || categories[0];
 
-  // Articles for this category
+  // Articles strictly for this category
   let categoryArticles = articles.filter(
-    a => a.categoryId === category?.id && a.status === 'published'
+    a => (a.categoryId === category?.id || a.categoryId === category?.slug) && a.status === 'published'
   );
 
   if (sortBy === 'popular') {

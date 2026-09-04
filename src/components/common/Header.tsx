@@ -101,23 +101,23 @@ export const Header: React.FC = () => {
             {/* Dark / Light Mode Toggle */}
             <button
               onClick={toggleDarkMode}
-              className="p-1 rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+              className="p-1 rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer"
               title={isDarkMode ? 'লাইট মোড চালু করুন' : 'ডার্ক মোড চালু করুন'}
             >
               {isDarkMode ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5" />}
             </button>
 
-            {/* Quick Link to Admin CMS only if authenticated */}
-            {isAdminAuthenticated ? (
+            {/* Only visible to logged-in administrator, completely hidden from general readers */}
+            {isAdminAuthenticated && (
               <button
                 onClick={() => navigateToAdmin()}
-                className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded font-medium text-xs shadow-xs transition-colors cursor-pointer border border-slate-700"
-                title="Admin Dashboard"
+                className="flex items-center gap-1.5 px-3 py-1 rounded-md font-semibold text-xs shadow-xs transition-all cursor-pointer bg-red-600 hover:bg-red-700 text-white"
+                title="অ্যাডমিন প্যানেল"
               >
-                <LayoutDashboard className="w-3.5 h-3.5 text-red-500" />
-                <span>Admin CMS</span>
+                <LayoutDashboard className="w-3.5 h-3.5 text-white" />
+                <span>CMS ড্যাশবোর্ড</span>
               </button>
-            ) : null}
+            )}
           </div>
         </div>
       </div>
@@ -149,11 +149,11 @@ export const Header: React.FC = () => {
           </span>
         </div>
 
-        {/* Search & Actions */}
+        {/* Search & Reader Actions */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setSearchOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-300 text-xs transition-colors"
+            className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-300 text-xs transition-colors cursor-pointer"
             title="সংবাদ খুঁজুন"
           >
             <Search className="w-4 h-4 text-gray-500" />
@@ -303,17 +303,19 @@ export const Header: React.FC = () => {
 
             {/* Drawer Footer */}
             <div className="p-4 border-t border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950">
-              <button
-                onClick={() => {
-                  navigateToAdmin();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full flex items-center justify-center gap-2 py-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-md text-xs font-medium transition-colors"
-              >
-                <Lock className="w-3.5 h-3.5" />
-                <span>{isAdminAuthenticated ? 'Admin CMS Panel' : 'স্টাফ লগইন (Staff Login)'}</span>
-              </button>
-              <div className="mt-2 text-center text-[11px] text-gray-400">
+              {isAdminAuthenticated && (
+                <button
+                  onClick={() => {
+                    navigateToAdmin();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 mb-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition-colors shadow-xs cursor-pointer"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>অ্যাডমিন ড্যাশবোর্ড (CMS)</span>
+                </button>
+              )}
+              <div className="text-center text-[11px] text-gray-400">
                 {todayDateBn}
               </div>
             </div>

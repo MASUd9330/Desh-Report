@@ -59,12 +59,23 @@
       })();
     </script>
     
+    <!-- Early Dark Mode Sync to prevent white flicker -->
+    <script>
+      (function() {
+        try {
+          if (localStorage.getItem('deshreport_theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (_) {}
+      })();
+    </script>
+
     <!-- Bangla Typography Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Noto+Serif+Bengali:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   </head>
-  <body class="bg-[#f8f9fa] text-[#111827] antialiased selection:bg-[#c00612] selection:text-white">
+  <body class="bg-[#f8f9fa] dark:bg-slate-950 text-[#111827] dark:text-gray-100 transition-colors antialiased selection:bg-[#c00612] selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

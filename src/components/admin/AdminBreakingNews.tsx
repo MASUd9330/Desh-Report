@@ -23,25 +23,38 @@ export const AdminBreakingNews: React.FC = () => {
 
   const [newTitle, setNewTitle] = useState('');
   const [newArticleId, setNewArticleId] = useState('');
-  const [newPriority, setNewPriority] = useState<number>(1);
+  const [newPriority, setNewPriority] = useState<'urgent' | 'high' | 'normal'>('urgent');
   const [showAddForm, setShowAddForm] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const handleArticleSelect = (artId: string) => {
+    setNewArticleId(artId);
+    if (artId) {
+      const art = articles.find(a => a.id === artId);
+      if (art && !newTitle) {
+        setNewTitle(art.title);
+      }
+    }
+  };
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
 
+    const selectedArt = articles.find(a => a.id === newArticleId);
+
     addBreakingNews({
       title: newTitle.trim(),
       articleId: newArticleId || undefined,
-      priority: Number(newPriority) || 1,
+      link: selectedArt ? `/article/${selectedArt.slug}` : undefined,
+      priority: newPriority,
       isActive: true,
-      displayLocation: ['homepage', 'category', 'article']
+      displayLocations: ['homepage', 'category', 'article']
     });
 
     setNewTitle('');
     setNewArticleId('');
-    setNewPriority(1);
+    setNewPriority('urgent');
     setShowAddForm(false);
   };
 
@@ -99,7 +112,7 @@ export const AdminBreakingNews: React.FC = () => {
               </label>
               <select
                 value={newArticleId}
-                onChange={e => setNewArticleId(e.target.value)}
+                onChange={e => handleArticleSelect(e.target.value)}
                 className="w-full text-xs bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg p-2 focus:outline-hidden"
               >
                 <option value="">No link (Text only)</option>
@@ -113,16 +126,17 @@ export const AdminBreakingNews: React.FC = () => {
 
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                Display Priority (1 = Top priority)
+                Display Priority
               </label>
-              <input
-                type="number"
-                min={1}
-                max={10}
+              <select
                 value={newPriority}
-                onChange={e => setNewPriority(Number(e.target.value))}
-                className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden"
-              />
+                onChange={e => setNewPriority(e.target.value as 'urgent' | 'high' | 'normal')}
+                className="w-full text-xs bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg p-2 focus:outline-hidden"
+              >
+                <option value="urgent">জরুরি (Urgent - Flashing Red)</option>
+                <option value="high">উচ্চ অগ্রাধিকার (High)</option>
+                <option value="normal">সাধারণ (Normal)</option>
+              </select>
             </div>
           </div>
 

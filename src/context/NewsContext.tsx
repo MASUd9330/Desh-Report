@@ -63,7 +63,7 @@ interface NewsContextType {
   navigateToCategory: (slug: string) => void;
   navigateToPage: (slug: string) => void;
   navigateToAdmin: (section?: string, subSection?: string) => void;
-  loginAdmin: (password: string, email?: string) => boolean;
+  loginAdmin: (passwordOrOtp: string, identifier?: string, isOtp?: boolean) => boolean;
   logoutAdmin: () => void;
   setSearchOpen: (open: boolean) => void;
   setSearchQuery: (query: string) => void;
@@ -141,11 +141,27 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [articles, setArticles] = useState<Article[]>(() => loadLocal('articles', initialArticles));
   const [categories, setCategories] = useState<Category[]>(() => loadLocal('categories', initialCategories));
-  const [breakingNews, setBreakingNews] = useState<BreakingNewsItem[]>(() => loadLocal('breaking', initialBreakingNews));
+  const [breakingNews, setBreakingNews] = useState<BreakingNewsItem[]>(() => {
+    const loaded = loadLocal<BreakingNewsItem[]>('breaking', initialBreakingNews);
+    if (loaded && loaded.length >= 6) {
+      return loaded;
+    }
+    const existingIds = new Set((loaded || []).map(b => b.id));
+    const merged = [...(loaded || []), ...initialBreakingNews.filter(b => !existingIds.has(b.id))];
+    return merged.length > 0 ? merged : initialBreakingNews;
+  });
   const [advertisements, setAdvertisements] = useState<Advertisement[]>(() => loadLocal('ads', initialAds));
   const [mediaLibrary, setMediaLibrary] = useState<MediaItem[]>(() => loadLocal('media', initialMedia));
   const [automationSources, setAutomationSources] = useState<AutomationSource[]>(() => loadLocal('automation', initialAutomationSources));
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => loadLocal('settings', initialSiteSettings));
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => {
+    const loaded = loadLocal<SiteSettings>('settings', initialSiteSettings);
+    return {
+      ...initialSiteSettings,
+      ...loaded,
+      address: 'খিলগাঁও, ঢাকা - ১২১৯',
+      editorName: 'মোহাম্মদ মাসুদ রানা'
+    };
+  });
   const [pages, setPages] = useState<PageItem[]>(() => loadLocal('pages', initialPages));
   const [users] = useState<User[]>(initialUsers);
   const [currentUser, setCurrentUser] = useState<User>(initialUsers[0]); // Default Tanvir Ahmed (Super Admin)
@@ -251,6 +267,71 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsDarkMode(prev => !prev);
   };
 
+  // Synchronize URL routing (/admin, #admin, articles, categories, pages)
+  useEffect(() => {
+    const handleUrlRoute = () => {
+      try {
+        const path = window.location.pathname.toLowerCase();
+        const hash = window.location.hash.toLowerCase();
+        const search = window.location.search.toLowerCase();
+
+        if (path === '/admin' || path.startsWith('/admin') || hash === '#admin' || search.includes('admin')) {
+          setActiveArticleId(null);
+          setActiveCategorySlug(null);
+          setActivePageSlug(null);
+          setCurrentView('admin');
+        } else if (path.startsWith('/article/')) {
+          const rawSlug = window.location.pathname.replace(/^\/article\//, '').replace(/\/$/, '').trim();
+          if (rawSlug) {
+            const art = articles.find(a => a.slug === rawSlug || a.id === rawSlug);
+            if (art) {
+              setActiveCategorySlug(null);
+              setActivePageSlug(null);
+              setActiveArticleId(art.id);
+              setCurrentView('article');
+            }
+          }
+        } else if (path.startsWith('/category/')) {
+          const rawSlug = window.location.pathname.replace(/^\/category\//, '').replace(/\/$/, '').trim();
+          if (rawSlug) {
+            setActiveArticleId(null);
+            setActivePageSlug(null);
+            setActiveCategorySlug(rawSlug);
+            setCurrentView('category');
+          }
+        } else if (path.startsWith('/page/')) {
+          const rawSlug = window.location.pathname.replace(/^\/page\//, '').replace(/\/$/, '').trim();
+          if (rawSlug) {
+            setActiveArticleId(null);
+            setActiveCategorySlug(null);
+            setActivePageSlug(rawSlug);
+            setCurrentView('page');
+          }
+        }
+      } catch (_) {}
+    };
+
+    handleUrlRoute();
+
+    window.addEventListener('popstate', handleUrlRoute);
+    window.addEventListener('hashchange', handleUrlRoute);
+
+    // Discreet key combo: Ctrl+Alt+A or Cmd+Alt+A to open Admin CMS
+    const handleKeydown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.altKey && (e.key === 'a' || e.key === 'A')) {
+        e.preventDefault();
+        navigateToAdmin();
+      }
+    };
+    window.addEventListener('keydown', handleKeydown);
+
+    return () => {
+      window.removeEventListener('popstate', handleUrlRoute);
+      window.removeEventListener('hashchange', handleUrlRoute);
+      window.removeEventListener('keydown', handleKeydown);
+    };
+  }, [articles]);
+
   const addActivityLog = (action: string, entityType: ActivityLog['entityType'], entityTitle: string) => {
     const newLog: ActivityLog = {
       id: 'log-' + Date.now(),
@@ -263,56 +344,109 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setActivityLogs(prev => [newLog, ...prev.slice(0, 49)]);
   };
 
-  // Navigation Methods
+  // Navigation Methods with URL PushState support
   const navigateToHome = () => {
-    setCurrentView('portal');
     setActiveArticleId(null);
     setActiveCategorySlug(null);
     setActivePageSlug(null);
+    setCurrentView('portal');
+    try {
+      if (window.location.pathname !== '/') {
+        window.history.pushState({ view: 'portal' }, '', '/');
+      }
+    } catch (_) {}
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const navigateToArticle = (idOrSlug: string) => {
     const article = articles.find(a => a.id === idOrSlug || a.slug === idOrSlug);
     if (article) {
+      setActiveCategorySlug(null);
+      setActivePageSlug(null);
       setActiveArticleId(article.id);
       setCurrentView('article');
+      try {
+        window.history.pushState({ view: 'article', slug: article.slug }, '', `/article/${article.slug}`);
+      } catch (_) {}
       window.scrollTo({ top: 0, behavior: 'smooth' });
       recordArticleView(article.id);
     }
   };
 
   const navigateToCategory = (slug: string) => {
+    setActiveArticleId(null);
+    setActivePageSlug(null);
     setActiveCategorySlug(slug);
     setCurrentView('category');
+    try {
+      window.history.pushState({ view: 'category', slug }, '', `/category/${slug}`);
+    } catch (_) {}
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const navigateToPage = (slug: string) => {
+    setActiveArticleId(null);
+    setActiveCategorySlug(null);
     setActivePageSlug(slug);
     setCurrentView('page');
+    try {
+      window.history.pushState({ view: 'page', slug }, '', `/page/${slug}`);
+    } catch (_) {}
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const navigateToAdmin = (section: string = 'dashboard', subSection: string = 'all') => {
+    setActiveArticleId(null);
+    setActiveCategorySlug(null);
+    setActivePageSlug(null);
     setAdminSectionState(section);
     setAdminSubSection(subSection);
     setCurrentView('admin');
+    try {
+      if (!window.location.pathname.startsWith('/admin')) {
+        window.history.pushState({ view: 'admin' }, '', '/admin');
+      }
+    } catch (_) {}
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const loginAdmin = (password: string, email?: string): boolean => {
-    const trimmedPw = password.trim();
+  const loginAdmin = (passwordOrOtp: string, identifier?: string, isOtp: boolean = false): boolean => {
+    const trimmedPw = (passwordOrOtp || '').trim();
+    const cleanId = (identifier || '').trim().toLowerCase();
+
+    // Check if identifier is Mohammad Masud Rana
+    const isMasud =
+      cleanId === 'masud.here9330@gmail.com' ||
+      cleanId.replace(/\D/g, '').endsWith('1581226134') ||
+      cleanId === '01581226134';
+
     const validPasswords = ['admin123', 'admin', 'deshreport', 'deshreport2026', '123456'];
-    if (validPasswords.includes(trimmedPw) || trimmedPw.length >= 6) {
+    const isValid = isOtp || validPasswords.includes(trimmedPw) || trimmedPw.length >= 6;
+
+    if (isValid) {
       setIsAdminAuthenticated(true);
       try {
         sessionStorage.setItem('deshreport_admin_auth', 'true');
         localStorage.setItem('deshreport_admin_auth', 'true');
       } catch (_) {}
 
-      if (email && email.trim()) {
-        const found = users.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
+      if (isMasud) {
+        const masudUser: User = users.find(u => u.email.toLowerCase() === 'masud.here9330@gmail.com') || {
+          id: 'usr-admin-masud',
+          name: 'মোহাম্মদ মাসুদ রানা',
+          email: 'masud.here9330@gmail.com',
+          phone: '01581226134',
+          role: 'super_admin',
+          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
+          title: 'সম্পাদক ও প্রকাশক (Editor & Publisher)',
+          articlesCount: 88,
+          status: 'active'
+        };
+        setCurrentUser(masudUser);
+      } else if (cleanId) {
+        const found = users.find(
+          u => u.email.toLowerCase() === cleanId || (u.phone && u.phone.replace(/\D/g, '').endsWith(cleanId.replace(/\D/g, '')))
+        );
         if (found) setCurrentUser(found);
       }
       return true;
@@ -382,6 +516,21 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     setArticles(prev => [newArticle, ...prev]);
+    if (newArticle.isBreaking) {
+      setBreakingNews(prev => [
+        {
+          id: 'brk-' + Date.now(),
+          title: newArticle.title,
+          link: `/article/${newArticle.slug}`,
+          articleId: newArticle.id,
+          priority: 'urgent',
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          displayLocations: ['homepage', 'category', 'article']
+        },
+        ...prev.filter(b => b.articleId !== newArticle.id)
+      ]);
+    }
     addActivityLog('সংবাদ প্রকাশ', 'article', newArticle.title);
     return newArticle;
   };
@@ -406,12 +555,37 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return item;
       })
     );
+
+    if (updates.isBreaking !== undefined) {
+      if (updates.isBreaking) {
+        const targetArt = articles.find(a => a.id === id);
+        const artTitle = updates.title || targetArt?.title || 'ব্রেকিং নিউজ';
+        const artSlug = updates.slug || targetArt?.slug || '';
+        setBreakingNews(prev => [
+          {
+            id: 'brk-' + Date.now(),
+            title: artTitle,
+            link: `/article/${artSlug}`,
+            articleId: id,
+            priority: 'urgent',
+            isActive: true,
+            createdAt: new Date().toISOString(),
+            displayLocations: ['homepage', 'category', 'article']
+          },
+          ...prev.filter(b => b.articleId !== id)
+        ]);
+      } else {
+        setBreakingNews(prev => prev.filter(b => b.articleId !== id));
+      }
+    }
+
     addActivityLog('সংবাদ সম্পাদনা', 'article', updates.title || 'সংবাদ');
   };
 
   const deleteArticle = (id: string) => {
     const target = articles.find(a => a.id === id);
     setArticles(prev => prev.filter(a => a.id !== id));
+    setBreakingNews(prev => prev.filter(b => b.articleId !== id));
     if (target) {
       addActivityLog('সংবাদ মুছে ফেলা হয়েছে', 'article', target.title);
     }

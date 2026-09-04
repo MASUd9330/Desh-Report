@@ -12,20 +12,12 @@ interface CategoryBlockProps {
 export const CategoryBlock: React.FC<CategoryBlockProps> = ({ category, articles: propArticles }) => {
   const { articles: allArticles, navigateToArticle, navigateToCategory } = useNews();
 
-  // Find articles for this category
+  // Find articles for this category strictly without mixing other categories
   const publishedArticles = allArticles.filter(a => a.status === 'published');
   
-  let categoryArticles = (propArticles && propArticles.length > 0)
+  const categoryArticles = (propArticles && propArticles.length > 0)
     ? propArticles
     : publishedArticles.filter(a => a.categoryId === category.id || a.categoryId === category.slug);
-
-  // If this specific category has fewer than 5 articles, gracefully supplement with other articles
-  // so the layout never has blank holes
-  if (categoryArticles.length < 5) {
-    const existingIds = new Set(categoryArticles.map(a => a.id));
-    const supplement = publishedArticles.filter(a => !existingIds.has(a.id));
-    categoryArticles = [...categoryArticles, ...supplement].slice(0, 5);
-  }
 
   if (categoryArticles.length === 0) return null;
 
