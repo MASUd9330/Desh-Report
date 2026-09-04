@@ -10,4 +10,6 @@
 /privacy-policy.html   /privacy-policy.html     200
 /terms-of-use          /terms-of-use.html       200
 /terms-of-use.html     /terms-of-use.html       200
+/sitemap               /sitemap.html            200
+/sitemap.html          /sitemap.html            200
 /*                     /index.html              200

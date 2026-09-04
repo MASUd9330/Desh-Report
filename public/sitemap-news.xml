@@ -2,14 +2,91 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
-    <loc>https://deshreport.netlify.app/</loc>
+    <loc>https://deshreport.netlify.app/article/dhaka-metro-rail-kamalapur-extension-timeline</loc>
     <news:news>
       <news:publication>
         <news:name>DeshReport</news:name>
         <news:language>bn</news:language>
       </news:publication>
-      <news:publication_date>2026-09-04T08:00:00+06:00</news:publication_date>
-      <news:title>DeshReport - বাংলাদেশের শীর্ষস্থানীয় ডিজিটাল সংবাদপত্র</news:title>
+      <news:publication_date>2026-09-04T12:00:00+06:00</news:publication_date>
+      <news:title>মেট্রোরেলের নতুন রুটের কাজ দ্রুত এগিয়ে চলছে, মতিঝিল থেকে কমলাপুর যুক্ত হবে এ বছরই</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://deshreport.netlify.app/article/commerce-ministry-taskforce-commodity-price-ramadan</loc>
+    <news:news>
+      <news:publication>
+        <news:name>DeshReport</news:name>
+        <news:language>bn</news:language>
+      </news:publication>
+      <news:publication_date>2026-09-04T11:30:00+06:00</news:publication_date>
+      <news:title>রমজানে নিত্যপণ্যের দাম নিয়ন্ত্রণে জেলা পর্যায়ে বিশেষ টাস্কফোর্স গঠনের নির্দেশ বাণিজ্য মন্ত্রণালয়ের</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://deshreport.netlify.app/article/bangladeshi-engineers-ai-healthcare-global-breakthrough</loc>
+    <news:news>
+      <news:publication>
+        <news:name>DeshReport</news:name>
+        <news:language>bn</news:language>
+      </news:publication>
+      <news:publication_date>2026-09-04T10:45:00+06:00</news:publication_date>
+      <news:title>কৃত্রিম বুদ্ধিমত্তা ব্যবহারে বাংলাদেশ প্রকৌশলীদের নতুন আন্তর্জাতিক সাফল্য</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://deshreport.netlify.app/article/election-reform-commission-draft-finalized</loc>
+    <news:news>
+      <news:publication>
+        <news:name>DeshReport</news:name>
+        <news:language>bn</news:language>
+      </news:publication>
+      <news:publication_date>2026-09-04T10:15:00+06:00</news:publication_date>
+      <news:title>নির্বাচন ব্যবস্থার সংস্কার কমিশনের সুপারিশ চূড়ান্ত, সর্বসম্মত খসড়া জমা এ সপ্তাহে</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://deshreport.netlify.app/article/bangladesh-champions-trophy-cricket-preparations</loc>
+    <news:news>
+      <news:publication>
+        <news:name>DeshReport</news:name>
+        <news:language>bn</news:language>
+      </news:publication>
+      <news:publication_date>2026-09-04T09:30:00+06:00</news:publication_date>
+      <news:title>চ্যাম্পিয়ন্স ট্রফির সেমিফাইনালের স্বপ্ন জিইয়ে রাখতে কঠোর অনুশীলনে শান্ত-মিরাজরা</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://deshreport.netlify.app/article/un-security-council-permanent-ceasefire-gaza</loc>
+    <news:news>
+      <news:publication>
+        <news:name>DeshReport</news:name>
+        <news:language>bn</news:language>
+      </news:publication>
+      <news:publication_date>2026-09-04T08:50:00+06:00</news:publication_date>
+      <news:title>জাতিসংঘ নিরাপত্তা পরিষদে গাজায় স্থায়ী যুদ্ধবিরতির প্রস্তাব সর্বসম্মতভাবে পাস</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://deshreport.netlify.app/article/sonar-bangla-movie-ott-release-review</loc>
+    <news:news>
+      <news:publication>
+        <news:name>DeshReport</news:name>
+        <news:language>bn</news:language>
+      </news:publication>
+      <news:publication_date>2026-09-04T08:10:00+06:00</news:publication_date>
+      <news:title>দেশীয় ওটিটি প্ল্যাটফর্মে মুক্তি পেল ঐতিহাসিক গল্পের আলোচিত সিনেমা ‘সোনার বাংলা’</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://deshreport.netlify.app/article/health-lifestyle-seasonal-change-wellness-tips</loc>
+    <news:news>
+      <news:publication>
+        <news:name>DeshReport</news:name>
+        <news:language>bn</news:language>
+      </news:publication>
+      <news:publication_date>2026-09-04T07:45:00+06:00</news:publication_date>
+      <news:title>শীতের শেষে সুস্থ থাকতে খাদ্যাভ্যাস ও প্রাত্যহিক ব্যায়ামের সঠিক নিয়ম</news:title>
     </news:news>
   </url>
 </urlset>

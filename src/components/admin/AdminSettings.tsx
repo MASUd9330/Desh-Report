@@ -8,11 +8,15 @@ import {
   RotateCcw,
   Check,
   Cloud,
-  X
+  X,
+  ExternalLink,
+  Copy,
+  FileCode,
+  Globe
 } from 'lucide-react';
 
 export const AdminSettings: React.FC = () => {
-  const { siteSettings, updateSiteSettings, resetToDefaultData, exportDataAsJson, importDataFromJson } = useNews();
+  const { siteSettings, updateSiteSettings, resetToDefaultData, exportDataAsJson, importDataFromJson, articles, categories } = useNews();
 
   const [siteName, setSiteName] = useState(siteSettings?.siteName || 'DeshReport');
   const [tagline, setTagline] = useState(siteSettings?.tagline || 'Leading Digital News Portal');
@@ -28,6 +32,77 @@ export const AdminSettings: React.FC = () => {
   const [saved, setSaved] = useState(false);
   const [importNotice, setImportNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [copiedItem, setCopiedItem] = useState<string | null>(null);
+
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedItem(label);
+    setTimeout(() => setCopiedItem(null), 2000);
+  };
+
+  const generateAndDownloadLiveSitemap = () => {
+    const baseUrl = 'https://deshreport.netlify.app';
+    const today = new Date().toISOString().split('T')[0];
+
+    const categoryEntries = categories.map(cat => `  <url>
+    <loc>${baseUrl}/category/${cat.slug}</loc>
+    <changefreq>hourly</changefreq>
+    <priority>0.85</priority>
+  </url>`).join('\n');
+
+    const publishedArticles = articles.filter(a => a.status === 'published');
+    const articleEntries = publishedArticles.map(art => `  <url>
+    <loc>${baseUrl}/article/${art.slug || art.id}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>`).join('\n');
+
+    const institutionalPages = [
+      'about.html',
+      'editorial-policy.html',
+      'corrections-policy.html',
+      'privacy-policy.html',
+      'terms-of-use.html',
+      'contact.html',
+      'sitemap.html'
+    ].map(page => `  <url>
+    <loc>${baseUrl}/${page}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>`).join('\n');
+
+    const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Homepage -->
+  <url>
+    <loc>${baseUrl}/</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>always</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Categories -->
+${categoryEntries}
+
+  <!-- Articles (${publishedArticles.length} published) -->
+${articleEntries}
+
+  <!-- Static Policy Pages -->
+${institutionalPages}
+</urlset>`;
+
+    const blob = new Blob([xmlContent], { type: 'application/xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'sitemap.xml';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -226,6 +301,162 @@ export const AdminSettings: React.FC = () => {
           <span>Save System Settings</span>
         </button>
       </form>
+
+      {/* XML & HTML Sitemap Management Card */}
+      <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-6 shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 dark:border-slate-800 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
+              <Globe className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-gray-900 dark:text-white">
+                Sitemap & Search Engine Indexing (সাইটম্যাপ ব্যবস্থাপনা)
+              </h3>
+              <p className="text-[11px] text-gray-500">
+                Google Search Console, Google News এবং বিং-এ স্বয়ংক্রিয় দ্রুত ইনডেক্সিংয়ের জন্য প্রস্তুত সাইটম্যাপ
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={generateAndDownloadLiveSitemap}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs cursor-pointer"
+            title="বর্তমান সকল আর্টিকেলের ভিত্তিতে নতুন sitemap.xml ডাউনলোড করুন"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Generate Live sitemap.xml</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          {/* Item 1: Standard XML Sitemap */}
+          <div className="p-4 rounded-lg bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700/80 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+                <FileCode className="w-4 h-4 text-emerald-500" />
+                <span>XML Sitemap</span>
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 font-bold">
+                Active
+              </span>
+            </div>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">
+              সকল ক্যাটাগরি, খবর ও প্রাতিষ্ঠানিক পেজের প্রধান XML সূচিপত্র।
+            </p>
+            <div className="pt-2 flex items-center gap-2">
+              <a
+                href="/sitemap.xml"
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded text-[11px] font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50"
+              >
+                <ExternalLink className="w-3 h-3" />
+                <span>Open /sitemap.xml</span>
+              </a>
+              <button
+                type="button"
+                onClick={() => handleCopy('https://deshreport.netlify.app/sitemap.xml', 'xml')}
+                className="px-2.5 py-1.5 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 rounded text-[11px] text-gray-700 dark:text-gray-200 cursor-pointer"
+                title="Copy Full URL"
+              >
+                {copiedItem === 'xml' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Item 2: Google News Sitemap */}
+          <div className="p-4 rounded-lg bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700/80 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+                <FileCode className="w-4 h-4 text-rose-500" />
+                <span>Google News XML</span>
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 font-bold">
+                Google News
+              </span>
+            </div>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">
+              Google News crawler-এর জন্য নির্দিষ্ট news schema সংবলিত সাইটম্যাপ।
+            </p>
+            <div className="pt-2 flex items-center gap-2">
+              <a
+                href="/sitemap-news.xml"
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded text-[11px] font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50"
+              >
+                <ExternalLink className="w-3 h-3" />
+                <span>Open /sitemap-news.xml</span>
+              </a>
+              <button
+                type="button"
+                onClick={() => handleCopy('https://deshreport.netlify.app/sitemap-news.xml', 'news-xml')}
+                className="px-2.5 py-1.5 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 rounded text-[11px] text-gray-700 dark:text-gray-200 cursor-pointer"
+                title="Copy Full URL"
+              >
+                {copiedItem === 'news-xml' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Item 3: HTML User Sitemap */}
+          <div className="p-4 rounded-lg bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700/80 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+                <Globe className="w-4 h-4 text-blue-500" />
+                <span>HTML Sitemap</span>
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold">
+                User Web Page
+              </span>
+            </div>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">
+              ভিজিটর ও পাঠকদের জন্য সম্পূর্ণ সাইটের আধুনিক সুবিন্যস্ত ওয়েব নেভিগেশন পেজ।
+            </p>
+            <div className="pt-2 flex items-center gap-2">
+              <a
+                href="/sitemap.html"
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded text-[11px] font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50"
+              >
+                <ExternalLink className="w-3 h-3" />
+                <span>Open /sitemap.html</span>
+              </a>
+              <button
+                type="button"
+                onClick={() => handleCopy('https://deshreport.netlify.app/sitemap.html', 'html')}
+                className="px-2.5 py-1.5 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 rounded text-[11px] text-gray-700 dark:text-gray-200 cursor-pointer"
+                title="Copy Full URL"
+              >
+                {copiedItem === 'html' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Search Console Submission Guide */}
+        <div className="p-3.5 rounded-lg bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 text-xs space-y-2">
+          <div className="font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+            <span>গুগল সার্চ কনসোলে সাইটম্যাপ জমা দেওয়ার নিয়ম (Google Search Console Submission):</span>
+          </div>
+          <ol className="list-decimal pl-4 space-y-1 text-amber-900/90 dark:text-amber-300/90 text-[11px] leading-relaxed">
+            <li>
+              <strong>Google Search Console</strong>-এ লগইন করে আপনার সাইট প্রোপার্টি (<code>https://deshreport.netlify.app</code>) নির্বাচন করুন।
+            </li>
+            <li>
+              বাম পাশের মেনু থেকে <strong>"Indexing" &gt; "Sitemaps"</strong> অপশনে যান।
+            </li>
+            <li>
+              <strong>"Add a new sitemap"</strong> বক্সে প্রথমে <code className="font-bold bg-amber-100 dark:bg-amber-900/60 px-1 py-0.5 rounded">sitemap.xml</code> লিখে <strong>Submit</strong> বাটনে ক্লিক করুন।
+            </li>
+            <li>
+              এরপর দ্বিতীয়বার বক্সে <code className="font-bold bg-amber-100 dark:bg-amber-900/60 px-1 py-0.5 rounded">sitemap-news.xml</code> লিখে <strong>Submit</strong> করুন।
+            </li>
+          </ol>
+        </div>
+      </div>
 
       {/* Data Backup & Portability */}
       <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-6 shadow-xs space-y-4">

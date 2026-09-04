@@ -188,6 +188,14 @@ export const Footer: React.FC = () => {
                   যোগাযোগ
                 </a>
               </li>
+              <li>
+                <a
+                  href="/sitemap.html"
+                  className="hover:text-red-400 transition-colors hover:underline block py-0.5"
+                >
+                  সাইটম্যাপ (Sitemap)
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -244,6 +252,19 @@ export const Footer: React.FC = () => {
           </p>
           <div className="flex items-center gap-3">
             <span>সম্পাদক ও প্রকাশক: {siteSettings.editorName || 'মোহাম্মদ মাসুদ রানা'}</span>
+            <span>•</span>
+            <a href="/sitemap.html" className="text-gray-400 hover:text-white transition-colors">
+              সাইটম্যাপ
+            </a>
+            <a
+              href="/sitemap.xml"
+              target="_blank"
+              rel="noreferrer"
+              className="text-gray-500 hover:text-gray-300 font-mono text-[11px]"
+              title="XML Sitemap for Google"
+            >
+              (XML)
+            </a>
             {isAdminAuthenticated && (
               <>
                 <span>•</span>
