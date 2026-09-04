@@ -25,10 +25,12 @@ export const AdminAdvertisements: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newType, setNewType] = useState<AdType>('banner');
-  const [newPlacement, setNewPlacement] = useState<AdPlacement>('sidebar');
-  const [newSize, setNewSize] = useState('300x250');
-  const [newProvider, setNewProvider] = useState<'adsterra' | 'google_adsense' | 'direct'>('adsterra');
+  const [newPlacement, setNewPlacement] = useState<AdPlacement>('after_first_paragraph');
+  const [newSize, setNewSize] = useState<'728x90' | '970x90' | '300x250' | '336x280' | '320x50' | '300x600'>('300x250');
+  const [newProvider, setNewProvider] = useState<'Adsterra' | 'Google AdSense' | 'Direct Sponsor' | 'Custom Script'>('Adsterra');
   const [newCode, setNewCode] = useState('');
+  const [newImageUrl, setNewImageUrl] = useState('');
+  const [newTargetUrl, setNewTargetUrl] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Adsterra API & Script Global Settings
@@ -40,24 +42,30 @@ export const AdminAdvertisements: React.FC = () => {
     if (!newTitle.trim()) return;
 
     addAdvertisement({
-      title: newTitle.trim(),
+      name: newTitle.trim(),
       type: newType,
       provider: newProvider,
       placement: newPlacement,
-      size: newSize,
-      code: newCode || '<!-- Ad script container -->',
+      bannerSize: newSize,
+      codeSnippet: newCode || '<!-- Ad script container -->',
+      imageUrl: newImageUrl.trim(),
+      targetUrl: newTargetUrl.trim(),
       status: 'active',
+      device: 'all',
+      priority: 1,
       impressions: 0,
       clicks: 0
     });
 
     setNewTitle('');
     setNewCode('');
+    setNewImageUrl('');
+    setNewTargetUrl('');
     setShowAddModal(false);
   };
 
   const filteredAds = advertisements.filter(ad => {
-    if (activeTab === 'adsterra') return ad.provider === 'adsterra';
+    if (activeTab === 'adsterra') return ad.provider === 'Adsterra';
     if (activeTab === 'banner') return ad.type === 'banner';
     if (activeTab === 'social_bar') return ad.type === 'social_bar';
     if (activeTab === 'popunder') return ad.type === 'popunder';
@@ -170,9 +178,10 @@ export const AdminAdvertisements: React.FC = () => {
                 onChange={e => setNewProvider(e.target.value as any)}
                 className="w-full text-xs bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg p-2"
               >
-                <option value="adsterra">Adsterra</option>
-                <option value="google_adsense">Google AdSense</option>
-                <option value="direct">Direct Sponsor Banner</option>
+                <option value="Adsterra">Adsterra Network</option>
+                <option value="Google AdSense">Google AdSense</option>
+                <option value="Direct Sponsor">Direct Sponsor / Banner</option>
+                <option value="Custom Script">Custom JavaScript Code</option>
               </select>
             </div>
           </div>
@@ -189,8 +198,8 @@ export const AdminAdvertisements: React.FC = () => {
               >
                 <option value="banner">Standard Banner</option>
                 <option value="social_bar">Social Bar (Floating)</option>
-                <option value="popunder">Popunder</option>
-                <option value="native_banner">Native Banner</option>
+                <option value="popunder">Popunder (Background)</option>
+                <option value="native_banner">Native Article Banner</option>
               </select>
             </div>
 
@@ -203,10 +212,15 @@ export const AdminAdvertisements: React.FC = () => {
                 onChange={e => setNewPlacement(e.target.value as AdPlacement)}
                 className="w-full text-xs bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg p-2"
               >
-                <option value="header_top">Header Top Leaderboard</option>
-                <option value="sidebar">Right Sidebar</option>
-                <option value="in_article">Inside Article Body</option>
-                <option value="bottom_sticky">Bottom Sticky Footer</option>
+                <option value="after_first_paragraph">Inside Article (After 1st Paragraph)</option>
+                <option value="middle_article">Inside Article (Middle of Article)</option>
+                <option value="after_article">Inside Article (After Full Article)</option>
+                <option value="sidebar">Sidebar (Right Column)</option>
+                <option value="below_header">Below Main Header (Leaderboard)</option>
+                <option value="below_breaking">Below Breaking News Ticker</option>
+                <option value="homepage_hero">Homepage Hero Grid</option>
+                <option value="category_page">Category Page Top</option>
+                <option value="footer">Footer Banner</option>
               </select>
             </div>
 
@@ -214,11 +228,44 @@ export const AdminAdvertisements: React.FC = () => {
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                 Dimension (Width x Height)
               </label>
-              <input
-                type="text"
+              <select
                 value={newSize}
-                onChange={e => setNewSize(e.target.value)}
-                placeholder="e.g. 728x90, 300x250"
+                onChange={e => setNewSize(e.target.value as any)}
+                className="w-full text-xs bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg p-2 font-mono"
+              >
+                <option value="300x250">300x250 (Medium Rectangle - Best for Articles & Sidebar)</option>
+                <option value="728x90">728x90 (Leaderboard - Header & Footer)</option>
+                <option value="336x280">336x280 (Large Rectangle)</option>
+                <option value="300x600">300x600 (Half Page - Sidebar)</option>
+                <option value="320x50">320x50 (Mobile Leaderboard)</option>
+                <option value="970x90">970x90 (Large Leaderboard)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                Direct Banner Image URL (Optional)
+              </label>
+              <input
+                type="url"
+                value={newImageUrl}
+                onChange={e => setNewImageUrl(e.target.value)}
+                placeholder="https://example.com/banner-ad.png"
+                className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                Target Click URL (Optional)
+              </label>
+              <input
+                type="url"
+                value={newTargetUrl}
+                onChange={e => setNewTargetUrl(e.target.value)}
+                placeholder="https://sponsor-website.com"
                 className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
               />
             </div>
@@ -226,7 +273,7 @@ export const AdminAdvertisements: React.FC = () => {
 
           <div>
             <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-              Ad Script / HTML Snippet
+              Ad Script / HTML Snippet (For Adsterra, AdSense, etc.)
             </label>
             <textarea
               rows={3}
@@ -322,7 +369,7 @@ export const AdminAdvertisements: React.FC = () => {
             {filteredAds.map(ad => (
               <tr key={ad.id} className="hover:bg-gray-50 dark:hover:bg-slate-800/40">
                 <td className="py-3 px-4 font-bold text-gray-900 dark:text-white">
-                  {ad.title}
+                  {ad.name || (ad as any).title}
                 </td>
                 <td className="py-3 px-3">
                   <span className="px-2 py-0.5 rounded bg-gray-100 dark:bg-slate-800 font-semibold uppercase text-[10px]">
@@ -333,7 +380,7 @@ export const AdminAdvertisements: React.FC = () => {
                   {ad.placement}
                 </td>
                 <td className="py-3 px-3 font-mono font-bold">
-                  {ad.size}
+                  {ad.bannerSize || (ad as any).size || '300x250'}
                 </td>
                 <td className="py-3 px-3">
                   <button

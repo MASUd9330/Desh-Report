@@ -50,7 +50,11 @@ export const AdminLayout: React.FC = () => {
         return <AdminDashboard />;
       case 'news':
         if (adminSubSection === 'add') {
-          return <AdminNewsEditor />;
+          return (
+            <AdminNewsEditor
+              key={`editor_${typeof window !== 'undefined' ? localStorage.getItem('deshreport_editing_id') || 'new' : 'new'}_${Date.now()}`}
+            />
+          );
         }
         return <AdminNewsList />;
       case 'breaking':

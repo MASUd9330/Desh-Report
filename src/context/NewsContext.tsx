@@ -714,18 +714,18 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
-  const addAdvertisement = (ad: Partial<Advertisement>) => {
+  const addAdvertisement = (ad: Partial<Advertisement> | any) => {
     const newAd: Advertisement = {
       id: 'ad-' + Date.now(),
-      name: ad.name || 'নতুন বিজ্ঞাপন ইউনিট',
+      name: ad.name || ad.title || 'নতুন বিজ্ঞাপন ইউনিট',
       provider: ad.provider || 'Adsterra',
       type: ad.type || 'banner',
-      bannerSize: ad.bannerSize || '728x90',
+      bannerSize: ad.bannerSize || ad.size || '728x90',
       placement: ad.placement || 'homepage_hero',
-      codeSnippet: ad.codeSnippet || '<!-- Ad Code Placeholder -->',
+      codeSnippet: ad.codeSnippet || ad.code || '<!-- Ad Code Placeholder -->',
       imageUrl: ad.imageUrl || '',
       targetUrl: ad.targetUrl || '',
-      status: 'active',
+      status: ad.status || 'active',
       device: ad.device || 'all',
       priority: ad.priority || 1,
       impressions: 0,

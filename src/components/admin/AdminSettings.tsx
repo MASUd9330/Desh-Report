@@ -356,7 +356,7 @@ ${institutionalPages}
               </a>
               <button
                 type="button"
-                onClick={() => handleCopy('https://deshreport.netlify.app/sitemap.xml', 'xml')}
+                onClick={() => handleCopy('https://deshreport.vercel.app/sitemap.xml', 'xml')}
                 className="px-2.5 py-1.5 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 rounded text-[11px] text-gray-700 dark:text-gray-200 cursor-pointer"
                 title="Copy Full URL"
               >
@@ -391,7 +391,7 @@ ${institutionalPages}
               </a>
               <button
                 type="button"
-                onClick={() => handleCopy('https://deshreport.netlify.app/sitemap-news.xml', 'news-xml')}
+                onClick={() => handleCopy('https://deshreport.vercel.app/sitemap-news.xml', 'news-xml')}
                 className="px-2.5 py-1.5 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 rounded text-[11px] text-gray-700 dark:text-gray-200 cursor-pointer"
                 title="Copy Full URL"
               >
@@ -426,7 +426,7 @@ ${institutionalPages}
               </a>
               <button
                 type="button"
-                onClick={() => handleCopy('https://deshreport.netlify.app/sitemap.html', 'html')}
+                onClick={() => handleCopy('https://deshreport.vercel.app/sitemap.html', 'html')}
                 className="px-2.5 py-1.5 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 rounded text-[11px] text-gray-700 dark:text-gray-200 cursor-pointer"
                 title="Copy Full URL"
               >
@@ -443,7 +443,7 @@ ${institutionalPages}
           </div>
           <ol className="list-decimal pl-4 space-y-1 text-amber-900/90 dark:text-amber-300/90 text-[11px] leading-relaxed">
             <li>
-              <strong>Google Search Console</strong>-এ লগইন করে আপনার সাইট প্রোপার্টি (<code>https://deshreport.netlify.app</code>) নির্বাচন করুন।
+              <strong>Google Search Console</strong>-এ লগইন করে আপনার সাইট প্রোপার্টি (<code>https://deshreport.vercel.app</code>) নির্বাচন করুন।
             </li>
             <li>
               বাম পাশের মেনু থেকে <strong>"Indexing" &gt; "Sitemaps"</strong> অপশনে যান।
@@ -518,21 +518,22 @@ ${institutionalPages}
         </div>
       </div>
 
-      {/* Production Netlify Architecture Card */}
+      {/* Production Deployment Architecture Card */}
       <div className="bg-slate-900 text-slate-200 border border-slate-800 rounded-xl p-6 shadow-xs space-y-3">
         <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-          <Cloud className="w-5 h-5 text-cyan-400" />
+          <Cloud className="w-5 h-5 text-emerald-400" />
           <h3 className="font-bold text-sm text-white">
-            Netlify Production Deployment Guide
+            Vercel Production Deployment Guide
           </h3>
         </div>
         <p className="text-xs text-slate-400 leading-relaxed">
-          The DeshReport platform is optimized as a modern Vite + React single-page application.
+          The DeshReport platform is optimized as a modern Vite + React single-page application and fully compatible with Vercel and Netlify.
         </p>
-        <div className="p-3 bg-slate-950 rounded-lg font-mono text-[11px] text-cyan-300 space-y-1">
+        <div className="p-3 bg-slate-950 rounded-lg font-mono text-[11px] text-emerald-300 space-y-1">
+          <div># Platform: Vercel (Recommended & 100% Free Unlimited)</div>
           <div># Build Command: npm run build</div>
-          <div># Publish Directory: dist</div>
-          <div># SPA Fallback: public/_redirects configured with /* /index.html 200</div>
+          <div># Output Directory: dist</div>
+          <div># Configuration: vercel.json & netlify.toml configured with full SPA Rewrites</div>
         </div>
       </div>
     </div>
