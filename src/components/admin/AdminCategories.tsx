@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { useNews } from '../../context/NewsContext';
-import { Category } from '../../types';
-import { FolderTree, Plus, Trash2, Edit2, Check, ArrowUpDown } from 'lucide-react';
+import { FolderTree, Plus, Trash2, Check, X } from 'lucide-react';
 
 export const AdminCategories: React.FC = () => {
-  const { categories, addCategory, updateCategory, deleteCategory, articles } = useNews();
+  const { categories = [], addCategory, deleteCategory, articles = [] } = useNews();
 
   const [nameBn, setNameBn] = useState('');
   const [nameEn, setNameEn] = useState('');
   const [slug, setSlug] = useState('');
-  const [color, setColor] = useState('#c00612');
+  const [color, setColor] = useState('#4f46e5');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const handleAddCategory = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +20,7 @@ export const AdminCategories: React.FC = () => {
       nameBn: nameBn.trim(),
       nameEn: nameEn.trim() || slug.trim(),
       slug: slug.trim().toLowerCase(),
-      color: color || '#c00612',
+      color: color || '#4f46e5',
       order: categories.length + 1
     });
 
@@ -34,67 +34,67 @@ export const AdminCategories: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-200 dark:border-slate-800">
         <div>
-          <h1 className="text-2xl font-bold font-serif-bn text-gray-900 dark:text-white flex items-center gap-2">
-            <FolderTree className="w-6 h-6 text-emerald-600" />
-            <span>ক্যাটাগরি ও বিভাগ ব্যবস্থাপনা (Categories)</span>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <FolderTree className="w-6 h-6 text-indigo-600" />
+            <span>Categories & Taxonomy Management</span>
           </h1>
           <p className="text-xs text-gray-500 mt-0.5">
-            সংবাদ পোর্টালের বিষয়ভিত্তিক ক্যাটাগরি, রঙ এবং ন্যাভিগেশন মেনু সাজান
+            Organize editorial categories, visual accent colors, and top navigation sections
           </p>
         </div>
 
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="flex items-center gap-1.5 px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-xs"
+          className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>নতুন ক্যাটাগরি যোগ করুন</span>
+          <span>{showAddForm ? 'Cancel' : '+ Add New Category'}</span>
         </button>
       </div>
 
       {showAddForm && (
         <form
           onSubmit={handleAddCategory}
-          className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-5 shadow-xs space-y-4"
+          className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-5 shadow-xs space-y-4 animate-fade-in"
         >
-          <h3 className="font-bold text-sm text-gray-900 dark:text-white">নতুন ক্যাটাগরির বিবরণ</h3>
+          <h3 className="font-bold text-sm text-gray-900 dark:text-white">New Category Details</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                বাংলা নাম *
+                Bengali Label *
               </label>
               <input
                 type="text"
                 required
                 value={nameBn}
                 onChange={e => setNameBn(e.target.value)}
-                placeholder="উদাঃ সংস্কৃতি"
-                className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden"
+                placeholder="e.g. অর্থনীতি"
+                className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:border-indigo-500"
               />
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                ইংরেজি নাম
+                English Name (Display Name)
               </label>
               <input
                 type="text"
                 value={nameEn}
                 onChange={e => setNameEn(e.target.value)}
-                placeholder="Culture"
-                className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden"
+                placeholder="e.g. Economy"
+                className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:border-indigo-500"
               />
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                স্লাগ (Slug) *
+                URL Slug *
               </label>
               <input
                 type="text"
                 required
                 value={slug}
                 onChange={e => setSlug(e.target.value)}
-                placeholder="culture"
-                className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden"
+                placeholder="e.g. economy"
+                className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:border-indigo-500"
               />
             </div>
           </div>
@@ -102,7 +102,7 @@ export const AdminCategories: React.FC = () => {
           <div className="flex items-center gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                ব্র্যান্ড অ্যাকসেন্ট রঙ
+                Badge Accent Color
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -119,15 +119,15 @@ export const AdminCategories: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowAddForm(false)}
-                className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700"
+                className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 cursor-pointer"
               >
-                বাতিল
+                Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs"
+                className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs cursor-pointer"
               >
-                যোগ করুন
+                Create Category
               </button>
             </div>
           </div>
@@ -139,13 +139,13 @@ export const AdminCategories: React.FC = () => {
         <table className="w-full text-left text-xs">
           <thead className="bg-gray-50 dark:bg-slate-950 text-gray-500 border-b border-gray-200 dark:border-slate-800 uppercase font-semibold">
             <tr>
-              <th className="py-3 px-4">ক্রম</th>
-              <th className="py-3 px-4">ক্যাটাগরি নাম (বাংলা)</th>
-              <th className="py-3 px-3">ইংরেজি নাম</th>
-              <th className="py-3 px-3">স্লাগ (URL)</th>
-              <th className="py-3 px-3">রঙ</th>
-              <th className="py-3 px-3">সংবাদ সংখ্যা</th>
-              <th className="py-3 px-4 text-right">অ্যাকশন</th>
+              <th className="py-3 px-4">#</th>
+              <th className="py-3 px-4">Category Name</th>
+              <th className="py-3 px-3">English Label</th>
+              <th className="py-3 px-3">URL Slug</th>
+              <th className="py-3 px-3">Color Accent</th>
+              <th className="py-3 px-3">Articles</th>
+              <th className="py-3 px-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
@@ -156,7 +156,7 @@ export const AdminCategories: React.FC = () => {
                   <td className="py-3 px-4 font-mono font-bold text-gray-400">
                     {idx + 1}
                   </td>
-                  <td className="py-3 px-4 font-bold font-serif-bn text-gray-900 dark:text-white flex items-center gap-2">
+                  <td className="py-3 px-4 font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <span
                       className="w-3 h-3 rounded-full shrink-0"
                       style={{ backgroundColor: cat.color }}
@@ -175,19 +175,37 @@ export const AdminCategories: React.FC = () => {
                     </span>
                   </td>
                   <td className="py-3 px-3 font-bold text-gray-800 dark:text-gray-200">
-                    {articleCount} টি সংবাদ
+                    {articleCount} articles
                   </td>
                   <td className="py-3 px-4 text-right">
-                    <button
-                      onClick={() => {
-                        if (window.confirm(`"${cat.nameBn}" ক্যাটাগরি মুছে ফেলতে চান?`)) {
-                          deleteCategory(cat.id);
-                        }
-                      }}
-                      className="p-1.5 text-gray-400 hover:text-red-600 rounded"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {confirmDeleteId === cat.id ? (
+                      <div className="inline-flex items-center gap-1 bg-red-50 dark:bg-red-950/80 p-1 rounded-lg border border-red-200 dark:border-red-800">
+                        <span className="text-[10px] text-red-600 font-semibold px-1">Delete?</span>
+                        <button
+                          onClick={() => {
+                            deleteCategory(cat.id);
+                            setConfirmDeleteId(null);
+                          }}
+                          className="p-1 text-white bg-red-600 hover:bg-red-700 rounded cursor-pointer"
+                        >
+                          <Check className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteId(null)}
+                          className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-white rounded cursor-pointer"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDeleteId(cat.id)}
+                        className="p-1.5 text-gray-400 hover:text-red-600 rounded cursor-pointer"
+                        title="Delete category"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               );

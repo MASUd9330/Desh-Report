@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNews } from '../../context/NewsContext';
-import { MediaItem } from '../../types';
 import {
   Image as ImageIcon,
   Upload,
@@ -8,24 +7,26 @@ import {
   Copy,
   Check,
   Trash2,
-  Filter,
   Sparkles,
-  ExternalLink
+  X
 } from 'lucide-react';
 
 export const AdminMediaLibrary: React.FC = () => {
-  const { mediaLibrary, addMediaItem, deleteMediaItem } = useNews();
+  const { mediaLibrary = [], addMediaItem, deleteMediaItem } = useNews();
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [filterFormat, setFilterFormat] = useState('all');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  // Simulated upload state
+  // Upload modal state
   const [uploadUrl, setUploadUrl] = useState('');
   const [uploadTitle, setUploadTitle] = useState('');
   const [showUploadModal, setShowUploadModal] = useState(false);
 
   const handleCopy = (url: string, id: string) => {
-    navigator.clipboard.writeText(url);
+    try {
+      navigator.clipboard.writeText(url);
+    } catch (_) {}
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2500);
   };
@@ -35,7 +36,7 @@ export const AdminMediaLibrary: React.FC = () => {
     if (!uploadUrl.trim()) return;
 
     addMediaItem({
-      title: uploadTitle.trim() || 'আপলোডকৃত ছবি',
+      title: uploadTitle.trim() || 'Uploaded Image',
       url: uploadUrl.trim(),
       mimeType: 'image/webp',
       size: 142000,
@@ -60,21 +61,21 @@ export const AdminMediaLibrary: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-200 dark:border-slate-800">
         <div>
-          <h1 className="text-2xl font-bold font-serif-bn text-gray-900 dark:text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <ImageIcon className="w-6 h-6 text-purple-600" />
-            <span>মিডিয়া ও ছবি লাইব্রেরি (Media Library)</span>
+            <span>Media Library & Assets</span>
           </h1>
           <p className="text-xs text-gray-500 mt-0.5">
-            উচ্চ রেজুলিউশনের অপটিমাইজড ছবি আপলোড, স্বয়ংক্রিয় WebP কনভার্সন ও ইউআরএল সংগ্রহ
+            Manage high-resolution optimized images, WebP assets, and CDN image URLs
           </p>
         </div>
 
         <button
           onClick={() => setShowUploadModal(true)}
-          className="flex items-center gap-1.5 px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-xs"
+          className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
         >
           <Upload className="w-4 h-4" />
-          <span>নতুন ছবি আপলোড করুন</span>
+          <span>Upload Image Asset</span>
         </button>
       </div>
 
@@ -86,26 +87,26 @@ export const AdminMediaLibrary: React.FC = () => {
         >
           <h3 className="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-purple-600" />
-            <span>ইমেজ আপলোড ও স্বয়ংক্রিয় কম্প্রেশন (Auto WebP 1200x800)</span>
+            <span>Image Upload & Registration (Auto 1200x800 WebP)</span>
           </h3>
 
           <div>
             <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-              ছবির ক্যাপশন / শিরোনাম *
+              Image Title / Caption *
             </label>
             <input
               type="text"
               required
               value={uploadTitle}
               onChange={e => setUploadTitle(e.target.value)}
-              placeholder="উদাঃ পদ্মা সেতু এক্সপ্রেসওয়ে"
-              className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden"
+              placeholder="e.g. Dhaka Metro Rail Station"
+              className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:border-purple-500"
             />
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-              ইমেজ ফাইল ইউআরএল (URL) *
+              Direct Image File URL *
             </label>
             <input
               type="url"
@@ -113,7 +114,7 @@ export const AdminMediaLibrary: React.FC = () => {
               value={uploadUrl}
               onChange={e => setUploadUrl(e.target.value)}
               placeholder="https://images.unsplash.com/..."
-              className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden"
+              className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:border-purple-500"
             />
           </div>
 
@@ -121,15 +122,15 @@ export const AdminMediaLibrary: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowUploadModal(false)}
-              className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700"
+              className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 cursor-pointer"
             >
-              বাতিল
+              Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs"
+              className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs cursor-pointer"
             >
-              আপলোড ও সেভ করুন
+              Save to Library
             </button>
           </div>
         </form>
@@ -143,20 +144,20 @@ export const AdminMediaLibrary: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="ছবির নাম লিখে খুঁজুন..."
+            placeholder="Search images by title..."
             className="w-full text-xs pl-8 pr-3 py-1.5 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden"
           />
         </div>
 
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-gray-400">ফরমেট:</span>
+          <span className="text-gray-400">Format:</span>
           <select
             value={filterFormat}
             onChange={e => setFilterFormat(e.target.value)}
             className="text-xs bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:outline-hidden"
           >
-            <option value="all">সকল ফরমেট</option>
-            <option value="webp">WebP (অপটিমাইজড)</option>
+            <option value="all">All Formats</option>
+            <option value="webp">WebP (Optimized)</option>
             <option value="jpeg">JPEG / JPG</option>
             <option value="png">PNG</option>
           </select>
@@ -178,12 +179,12 @@ export const AdminMediaLibrary: React.FC = () => {
                 referrerPolicy="no-referrer"
               />
               <span className="absolute top-1.5 right-1.5 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/70 text-white font-mono">
-                {item.mimeType.split('/')[1]}
+                {item.mimeType.split('/')[1] || 'img'}
               </span>
             </div>
 
             <div className="p-3">
-              <h4 className="font-semibold text-xs text-gray-900 dark:text-white truncate">
+              <h4 className="font-semibold text-xs text-gray-900 dark:text-white truncate" title={item.title}>
                 {item.title}
               </h4>
               <div className="mt-1 flex items-center justify-between text-[10px] text-gray-400 font-mono">
@@ -194,31 +195,50 @@ export const AdminMediaLibrary: React.FC = () => {
               <div className="mt-3 pt-2 border-t border-gray-100 dark:border-slate-800 flex items-center justify-between">
                 <button
                   onClick={() => handleCopy(item.url, item.id)}
-                  className="flex items-center gap-1 text-[11px] text-gray-600 dark:text-gray-300 hover:text-red-600 font-semibold"
+                  className="flex items-center gap-1 text-[11px] text-gray-600 dark:text-gray-300 hover:text-indigo-600 font-semibold cursor-pointer"
                 >
                   {copiedId === item.id ? (
                     <>
                       <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      <span className="text-emerald-600">কপি হয়েছে!</span>
+                      <span className="text-emerald-600">Copied!</span>
                     </>
                   ) : (
                     <>
                       <Copy className="w-3.5 h-3.5" />
-                      <span>URL কপি</span>
+                      <span>Copy URL</span>
                     </>
                   )}
                 </button>
 
-                <button
-                  onClick={() => {
-                    if (window.confirm('এই ছবিটি মুছে ফেলতে চান?')) {
-                      deleteMediaItem(item.id);
-                    }
-                  }}
-                  className="p-1 text-gray-400 hover:text-red-600 rounded"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                {confirmDeleteId === item.id ? (
+                  <div className="inline-flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        deleteMediaItem(item.id);
+                        setConfirmDeleteId(null);
+                      }}
+                      className="p-1 bg-red-600 text-white rounded cursor-pointer"
+                      title="Confirm delete"
+                    >
+                      <Check className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteId(null)}
+                      className="p-1 text-gray-400 hover:text-gray-600 cursor-pointer"
+                      title="Cancel"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDeleteId(item.id)}
+                    className="p-1 text-gray-400 hover:text-red-600 rounded cursor-pointer"
+                    title="Delete image"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             </div>
           </div>

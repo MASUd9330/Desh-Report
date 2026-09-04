@@ -14,11 +14,11 @@ import {
 export const AdminSocialMedia: React.FC = () => {
   const { socialLinks, updateSocialLinks } = useNews();
 
-  const [fb, setFb] = useState(socialLinks.facebook);
-  const [tw, setTw] = useState(socialLinks.twitter);
-  const [yt, setYt] = useState(socialLinks.youtube);
-  const [tg, setTg] = useState(socialLinks.telegram);
-  const [wa, setWa] = useState(socialLinks.whatsapp);
+  const [fb, setFb] = useState(socialLinks?.facebook || '');
+  const [tw, setTw] = useState(socialLinks?.twitter || '');
+  const [yt, setYt] = useState(socialLinks?.youtube || '');
+  const [tg, setTg] = useState(socialLinks?.telegram || '');
+  const [wa, setWa] = useState(socialLinks?.whatsapp || '');
   const [autoShare, setAutoShare] = useState(true);
   const [saved, setSaved] = useState(false);
 
@@ -38,19 +38,19 @@ export const AdminSocialMedia: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="pb-4 border-b border-gray-200 dark:border-slate-800">
-        <h1 className="text-2xl font-bold font-serif-bn text-gray-900 dark:text-white flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <Share2 className="w-6 h-6 text-blue-600" />
-          <span>সোশ্যাল মিডিয়া ও চ্যানেল সংযোগ (Social Media Channels)</span>
+          <span>Social Media & Broadcast Channels</span>
         </h1>
         <p className="text-xs text-gray-500 mt-0.5">
-          ফেসবুক পেজ, টেলিগ্রাম চ্যানেল, ইউটিউব ও হোয়াটসঅ্যাপ চ্যানেলের লিংক ও অটো শেয়ার
+          Configure official Facebook page, Telegram news broadcast, YouTube channel, and WhatsApp community links
         </p>
       </div>
 
       {saved && (
         <div className="p-3 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-500 text-emerald-800 dark:text-emerald-300 rounded-lg text-xs font-semibold flex items-center gap-2">
           <Check className="w-4 h-4 text-emerald-600" />
-          <span>সোশ্যাল মিডিয়া লিংকসমূহ সফলভাবে সংরক্ষিত হয়েছে!</span>
+          <span>Social media profile links updated successfully!</span>
         </div>
       )}
 
@@ -58,65 +58,70 @@ export const AdminSocialMedia: React.FC = () => {
         <div>
           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-2">
             <Facebook className="w-4 h-4 text-blue-600" />
-            <span>অফিসিয়াল ফেসবুক পেজ URL</span>
+            <span>Official Facebook Page URL</span>
           </label>
           <input
             type="url"
             value={fb}
             onChange={e => setFb(e.target.value)}
-            className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
+            placeholder="https://facebook.com/deshreport"
+            className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden"
           />
         </div>
 
         <div>
           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-2">
             <Send className="w-4 h-4 text-sky-500" />
-            <span>টেলিগ্রাম নিউজ চ্যানেল URL</span>
+            <span>Telegram Channel URL</span>
           </label>
           <input
             type="url"
             value={tg}
             onChange={e => setTg(e.target.value)}
-            className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
+            placeholder="https://t.me/deshreport"
+            className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden"
           />
         </div>
 
         <div>
           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-2">
             <Youtube className="w-4 h-4 text-red-600" />
-            <span>ইউটিউব চ্যানেল URL</span>
+            <span>YouTube Channel URL</span>
           </label>
           <input
             type="url"
             value={yt}
             onChange={e => setYt(e.target.value)}
-            className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
+            placeholder="https://youtube.com/@deshreport"
+            className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden"
           />
         </div>
 
         <div>
           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-2">
             <Twitter className="w-4 h-4 text-gray-900 dark:text-gray-200" />
-            <span>এক্স (সাবেক টুইটার) প্রোফাইল URL</span>
+            <span>X (formerly Twitter) Profile URL</span>
           </label>
           <input
             type="url"
             value={tw}
             onChange={e => setTw(e.target.value)}
-            className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
+            placeholder="https://x.com/deshreport"
+            className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden"
           />
         </div>
 
         <div>
           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-2">
             <MessageCircle className="w-4 h-4 text-emerald-500" />
-            <span>হোয়াটসঅ্যাপ চ্যানেল / হেল্পলাইন লিংক</span>
+            <span>WhatsApp Channel / Group Link</span>
           </label>
           <input
             type="url"
             value={wa}
             onChange={e => setWa(e.target.value)}
-            className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
+            placeholder="https://chat.whatsapp.com/..."
+            className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden"
           />
         </div>
 
@@ -126,20 +131,20 @@ export const AdminSocialMedia: React.FC = () => {
               type="checkbox"
               checked={autoShare}
               onChange={e => setAutoShare(e.target.checked)}
-              className="rounded text-blue-600"
+              className="rounded text-indigo-600"
             />
             <span className="font-semibold text-gray-800 dark:text-gray-200">
-              নতুন সংবাদ প্রকাশের সাথে সাথে স্বয়ংক্রিয়ভাবে ফেসবুক ও টেলিগ্রামে পোস্ট জেনারেট করুন
+              Auto-generate broadcast cards to social channels when new articles are published
             </span>
           </label>
         </div>
 
         <button
           type="submit"
-          className="flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs"
+          className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs cursor-pointer"
         >
           <Save className="w-4 h-4" />
-          <span>সংরক্ষণ করুন</span>
+          <span>Save Social Links</span>
         </button>
       </form>
     </div>

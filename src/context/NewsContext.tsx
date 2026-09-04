@@ -11,7 +11,8 @@ import {
   PageItem,
   ActivityLog,
   NewsStatus,
-  DuplicateDetectionRule
+  DuplicateDetectionRule,
+  AutomationSettings
 } from '../types';
 import {
   initialArticles,
@@ -37,6 +38,7 @@ interface NewsContextType {
   searchOpen: boolean;
   searchQuery: string;
   isDarkMode: boolean;
+  darkMode: boolean;
   currentUser: User;
 
   // Data
@@ -47,6 +49,7 @@ interface NewsContextType {
   mediaLibrary: MediaItem[];
   automationSources: AutomationSource[];
   duplicateRule: DuplicateDetectionRule;
+  automationSettings: AutomationSettings;
   siteSettings: SiteSettings;
   pages: PageItem[];
   users: User[];
@@ -96,6 +99,7 @@ interface NewsContextType {
   deleteAutomationSource: (id: string) => void;
   runAutomationFeed: (sourceId: string) => Promise<{ imported: number; duplicates: number }>;
   updateDuplicateRule: (rule: Partial<DuplicateDetectionRule>) => void;
+  updateAutomationSettings: (settings: Partial<AutomationSettings>) => void;
 
   // Settings & Pages Actions
   updateSiteSettings: (settings: Partial<SiteSettings>) => void;
@@ -148,6 +152,21 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkSourceUrl: true,
     checkHeadlineSimilarity: true,
     actionOnDuplicate: 'reject'
+  });
+
+  const [automationSettings, setAutomationSettings] = useState<AutomationSettings>(() => {
+    try {
+      const saved = localStorage.getItem('deshreport_automation_settings');
+      if (saved) return JSON.parse(saved);
+    } catch (_) {}
+    return {
+      similarityThreshold: 75,
+      checkSourceUrl: true,
+      actionOnDuplicate: 'skip',
+      scheduleIntervalMinutes: 30,
+      autoExtractImage: true,
+      autoAssignCategory: true
+    };
   });
 
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([
@@ -518,6 +537,28 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setDuplicateRule(prev => ({ ...prev, ...rule }));
   };
 
+  const updateAutomationSettings = (settings: Partial<AutomationSettings>) => {
+    setAutomationSettings(prev => {
+      const next = { ...prev, ...settings };
+      try {
+        localStorage.setItem('deshreport_automation_settings', JSON.stringify(next));
+      } catch (_) {}
+      return next;
+    });
+    if (settings.similarityThreshold !== undefined) {
+      setDuplicateRule(prev => ({
+        ...prev,
+        similarityThreshold: settings.similarityThreshold! / 100
+      }));
+    }
+    if (settings.checkSourceUrl !== undefined) {
+      setDuplicateRule(prev => ({
+        ...prev,
+        checkSourceUrl: settings.checkSourceUrl!
+      }));
+    }
+  };
+
   // RSS / News API Fetch simulation with REAL duplicate detection algorithm
   const runAutomationFeed = async (sourceId: string): Promise<{ imported: number; duplicates: number }> => {
     const src = automationSources.find(s => s.id === sourceId);
@@ -698,6 +739,7 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         searchOpen,
         searchQuery,
         isDarkMode,
+        darkMode: isDarkMode,
         currentUser,
         articles,
         categories,
@@ -706,6 +748,7 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         mediaLibrary,
         automationSources,
         duplicateRule,
+        automationSettings,
         siteSettings,
         pages,
         users,
@@ -741,6 +784,7 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         deleteAutomationSource,
         runAutomationFeed,
         updateDuplicateRule,
+        updateAutomationSettings,
         updateSiteSettings,
         updatePage,
         exportDatabaseBackup,

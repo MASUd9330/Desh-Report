@@ -137,26 +137,31 @@ export const AdminLayout: React.FC = () => {
             </div>
 
             <button
-              onClick={() => setAdminSection('news', 'add')}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors"
+              onClick={() => {
+                try {
+                  localStorage.removeItem('deshreport_editing_id');
+                } catch (_) {}
+                setAdminSection('news', 'add');
+              }}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
             >
               <PlusCircle className="w-3.5 h-3.5" />
-              <span>নতুন সংবাদ</span>
+              <span>+ New Article</span>
             </button>
 
             <button
               onClick={navigateToHome}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-colors border border-transparent dark:border-slate-700/50"
-              title="লাইভ পাবলিক পোর্টাল দেখুন"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-colors border border-transparent dark:border-slate-700/50 cursor-pointer"
+              title="View Public Live Website"
             >
               <ExternalLink className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">লাইভ সাইট</span>
+              <span className="hidden sm:inline">Live Site</span>
             </button>
 
             <button
               onClick={toggleDarkMode}
-              className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              title="ডার্ক / লাইট মোড"
+              className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              title="Toggle Dark / Light Mode"
             >
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>

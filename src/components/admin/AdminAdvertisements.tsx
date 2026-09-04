@@ -1,27 +1,18 @@
 import React, { useState } from 'react';
 import { useNews } from '../../context/NewsContext';
-import { AdPlacement, AdType, Advertisement } from '../../types';
+import { AdPlacement, AdType } from '../../types';
 import {
   Megaphone,
   Plus,
   Trash2,
-  CheckCircle2,
-  XCircle,
-  Code,
-  Layout,
-  Sliders,
-  DollarSign,
-  Smartphone,
-  ExternalLink,
-  Shield,
-  Activity
+  Check,
+  X
 } from 'lucide-react';
-import { toBengaliNumber } from '../../utils/helpers';
 
 export const AdminAdvertisements: React.FC = () => {
   const {
     adminSubSection,
-    advertisements,
+    advertisements = [],
     addAdvertisement,
     updateAdvertisement,
     deleteAdvertisement
@@ -31,7 +22,6 @@ export const AdminAdvertisements: React.FC = () => {
     (adminSubSection as any) || 'all'
   );
 
-  // New Ad Unit Form Modal
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newType, setNewType] = useState<AdType>('banner');
@@ -39,11 +29,11 @@ export const AdminAdvertisements: React.FC = () => {
   const [newSize, setNewSize] = useState('300x250');
   const [newProvider, setNewProvider] = useState<'adsterra' | 'google_adsense' | 'direct'>('adsterra');
   const [newCode, setNewCode] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Adsterra API & Script Global Settings
   const [adsterraPublisherId, setAdsterraPublisherId] = useState('ADS-9842104-BD');
   const [popunderFrequency, setPopunderFrequency] = useState('1');
-  const [socialBarDelay, setSocialBarDelay] = useState('3');
 
   const handleCreateAd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +45,7 @@ export const AdminAdvertisements: React.FC = () => {
       provider: newProvider,
       placement: newPlacement,
       size: newSize,
-      code: newCode || '<!-- Adsterra script container -->',
+      code: newCode || '<!-- Ad script container -->',
       status: 'active',
       impressions: 0,
       clicks: 0
@@ -79,67 +69,68 @@ export const AdminAdvertisements: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-200 dark:border-slate-800">
         <div>
-          <h1 className="text-2xl font-bold font-serif-bn text-gray-900 dark:text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Megaphone className="w-6 h-6 text-pink-600" />
-            <span>বিজ্ঞাপন নেটওয়ার্ক ও প্লেসমেন্ট (Ad Management)</span>
+            <span>Ad Management & Network Placements</span>
           </h1>
           <p className="text-xs text-gray-500 mt-0.5">
-            Adsterra, Google AdSense ও লোকাল স্পনসর ব্যানার, পপআন্ডার ও সোশ্যাল বার নিয়ন্ত্রণ
+            Configure Adsterra, Google AdSense, banners, popunders, and direct sponsor placements
           </p>
         </div>
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-1.5 px-3.5 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg text-xs font-semibold shadow-xs self-start sm:self-auto"
+          className="flex items-center gap-1.5 px-3.5 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg text-xs font-semibold shadow-xs self-start sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>নতুন বিজ্ঞাপন ইউনিট যোগ করুন</span>
+          <span>+ Add New Ad Unit</span>
         </button>
       </div>
 
       {/* Quick Overview Badges */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
         <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-3.5 shadow-xs">
-          <span className="text-gray-400 block mb-1">মোট অ্যাক্টিভ স্লট</span>
+          <span className="text-gray-400 block mb-1">Active Ad Slots</span>
           <span className="text-xl font-bold text-gray-900 dark:text-white font-mono">
-            {toBengaliNumber(advertisements.filter(a => a.status === 'active').length)}
+            {advertisements.filter(a => a.status === 'active').length}
           </span>
         </div>
         <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-3.5 shadow-xs">
-          <span className="text-gray-400 block mb-1">মোট ইমপ্রেশন (আজ)</span>
+          <span className="text-gray-400 block mb-1">Total Impressions</span>
           <span className="text-xl font-bold text-pink-600 font-mono">
-            {toBengaliNumber(advertisements.reduce((a, c) => a + c.impressions, 0))}
+            {advertisements.reduce((a, c) => a + (c.impressions || 0), 0).toLocaleString()}
           </span>
         </div>
         <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-3.5 shadow-xs">
-          <span className="text-gray-400 block mb-1">ক্লিক সংখ্যা (Clicks)</span>
+          <span className="text-gray-400 block mb-1">Recorded Clicks</span>
           <span className="text-xl font-bold text-emerald-600 font-mono">
-            {toBengaliNumber(advertisements.reduce((a, c) => a + c.clicks, 0))}
+            {advertisements.reduce((a, c) => a + (c.clicks || 0), 0).toLocaleString()}
           </span>
         </div>
         <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-3.5 shadow-xs">
-          <span className="text-gray-400 block mb-1">গড় সিটিআর (CTR)</span>
-          <span className="text-xl font-bold text-blue-600 font-mono">২.৪৫%</span>
+          <span className="text-gray-400 block mb-1">Primary Network</span>
+          <span className="text-xl font-bold text-indigo-600 font-mono">
+            Adsterra
+          </span>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-gray-200 dark:border-slate-800 text-xs overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-1 border-b border-gray-200 dark:border-slate-800 overflow-x-auto pb-1 text-xs">
         {[
-          { id: 'all', label: 'সকল অ্যাড ইউনিট' },
-          { id: 'adsterra', label: 'Adsterra কনফিগারেশন' },
-          { id: 'banner', label: 'ব্যানার (Banner Ads)' },
-          { id: 'social_bar', label: 'সোশ্যাল বার (Social Bar)' },
-          { id: 'popunder', label: 'পপআন্ডার (Popunder)' },
-          { id: 'placements', label: 'প্লেসমেন্ট ম্যাট্রিক্স' }
+          { id: 'all', label: 'All Ad Units' },
+          { id: 'adsterra', label: 'Adsterra Network' },
+          { id: 'banner', label: 'Banner Displays' },
+          { id: 'social_bar', label: 'Social Bar' },
+          { id: 'popunder', label: 'Popunder Unit' }
         ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
-            className={`pb-3 px-3 font-semibold border-b-2 whitespace-nowrap transition-colors ${
+            className={`px-3 py-1.5 rounded-lg whitespace-nowrap font-medium cursor-pointer ${
               activeTab === tab.id
-                ? 'border-pink-600 text-pink-600'
-                : 'border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                ? 'bg-pink-600 text-white font-bold'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800'
             }`}
           >
             {tab.label}
@@ -153,33 +144,35 @@ export const AdminAdvertisements: React.FC = () => {
           onSubmit={handleCreateAd}
           className="bg-white dark:bg-slate-900 border border-pink-200 dark:border-pink-900/40 rounded-xl p-5 shadow-xs space-y-4 animate-fade-in"
         >
-          <h3 className="font-bold text-sm text-gray-900 dark:text-white">নতুন অ্যাড ইউনিট যুক্ত করুন</h3>
+          <h3 className="font-bold text-sm text-gray-900 dark:text-white">New Advertisement Unit</h3>
+          
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                বিজ্ঞাপনের নাম *
+                Ad Unit Name / Identifier *
               </label>
               <input
                 type="text"
                 required
                 value={newTitle}
                 onChange={e => setNewTitle(e.target.value)}
-                placeholder="উদাঃ Adsterra 728x90 Header Leaderboard"
-                className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
+                placeholder="e.g. Header Leaderboard 728x90"
+                className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden"
               />
             </div>
+
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                বিজ্ঞাপনদাতা প্রোভাইডার
+                Ad Network Provider
               </label>
               <select
                 value={newProvider}
                 onChange={e => setNewProvider(e.target.value as any)}
-                className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
+                className="w-full text-xs bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg p-2"
               >
-                <option value="adsterra">Adsterra Network</option>
+                <option value="adsterra">Adsterra</option>
                 <option value="google_adsense">Google AdSense</option>
-                <option value="direct">লোকাল স্পনসর (Direct Image)</option>
+                <option value="direct">Direct Sponsor Banner</option>
               </select>
             </div>
           </div>
@@ -187,47 +180,45 @@ export const AdminAdvertisements: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                বিজ্ঞাপনের ধরন
+                Ad Type
               </label>
               <select
                 value={newType}
-                onChange={e => setNewType(e.target.value as any)}
-                className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
+                onChange={e => setNewType(e.target.value as AdType)}
+                className="w-full text-xs bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg p-2"
               >
-                <option value="banner">ব্যানার (Banner)</option>
-                <option value="social_bar">সোশ্যাল বার (Social Bar)</option>
-                <option value="popunder">পপআন্ডার (Popunder)</option>
-                <option value="native">নেটিভ বিজ্ঞাপন (Native)</option>
+                <option value="banner">Standard Banner</option>
+                <option value="social_bar">Social Bar (Floating)</option>
+                <option value="popunder">Popunder</option>
+                <option value="native_banner">Native Banner</option>
               </select>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                প্লেসমেন্ট অবস্থান
+                Placement Location
               </label>
               <select
                 value={newPlacement}
-                onChange={e => setNewPlacement(e.target.value as any)}
-                className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
+                onChange={e => setNewPlacement(e.target.value as AdPlacement)}
+                className="w-full text-xs bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg p-2"
               >
-                <option value="header_top">হেডার শীর্ষ (728x90)</option>
-                <option value="below_breaking">ব্রেকিং টিকারে নিচে (970x90)</option>
-                <option value="sidebar">সাইডবার (300x250)</option>
-                <option value="in_article">প্রতিবেদনের ভেতরে (300x250)</option>
-                <option value="between_cards">নিউজ কার্ডের মাঝে</option>
-                <option value="footer_sticky">মোবাইল স্টিকি ফুটার (320x50)</option>
+                <option value="header_top">Header Top Leaderboard</option>
+                <option value="sidebar">Right Sidebar</option>
+                <option value="in_article">Inside Article Body</option>
+                <option value="bottom_sticky">Bottom Sticky Footer</option>
               </select>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                সাইজ / মাত্রা
+                Dimension (Width x Height)
               </label>
               <input
                 type="text"
                 value={newSize}
                 onChange={e => setNewSize(e.target.value)}
-                placeholder="728x90"
+                placeholder="e.g. 728x90, 300x250"
                 className="w-full text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
               />
             </div>
@@ -235,14 +226,14 @@ export const AdminAdvertisements: React.FC = () => {
 
           <div>
             <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-              এইচটিএমএল / স্ক্রিপ্ট কোড (Script Embed Code)
+              Ad Script / HTML Snippet
             </label>
             <textarea
               rows={3}
               value={newCode}
               onChange={e => setNewCode(e.target.value)}
-              placeholder="<script type='text/javascript' src='//...'>"
-              className="w-full font-mono text-xs px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
+              placeholder="Paste JavaScript snippet or HTML container code..."
+              className="w-full text-xs font-mono px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
             />
           </div>
 
@@ -250,15 +241,15 @@ export const AdminAdvertisements: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowAddModal(false)}
-              className="px-3 py-1.5 text-xs text-gray-500"
+              className="px-3 py-1.5 text-xs text-gray-500 cursor-pointer"
             >
-              বাতিল
+              Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-1.5 bg-pink-600 hover:bg-pink-700 text-white rounded text-xs font-bold"
+              className="px-4 py-1.5 bg-pink-600 hover:bg-pink-700 text-white rounded text-xs font-bold cursor-pointer"
             >
-              সংরক্ষণ ও সক্রিয় করুন
+              Save & Activate Unit
             </button>
           </div>
         </form>
@@ -270,14 +261,14 @@ export const AdminAdvertisements: React.FC = () => {
           <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-slate-800">
             <div>
               <h3 className="text-base font-bold text-gray-900 dark:text-white">
-                Adsterra পাবলিশার সেটিংস
+                Adsterra Publisher Integration
               </h3>
               <p className="text-xs text-gray-500">
-                Adsterra নেটওয়ার্কের ডিরেক্ট স্ক্রিপ্ট ও কি-আইডি সংযোগ
+                Network authentication key and frequency caps
               </p>
             </div>
             <span className="px-2.5 py-1 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
-              সক্রিয় সংযুক্ত
+              Connected
             </span>
           </div>
 
@@ -296,17 +287,17 @@ export const AdminAdvertisements: React.FC = () => {
 
             <div>
               <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                পপআন্ডার ফ্রিকোয়েন্সি লিমিট (প্রতি ২৪ ঘণ্টায়)
+                Popunder Frequency Limit (per 24 hours)
               </label>
               <select
                 value={popunderFrequency}
                 onChange={e => setPopunderFrequency(e.target.value)}
                 className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
               >
-                <option value="1">১ বার (প্রস্তাবিত - সর্বোচ্চ ইউজার ফ্রেন্ডলি)</option>
-                <option value="2">২ বার</option>
-                <option value="3">৩ বার</option>
-                <option value="unlimited">আনলিমিটেড</option>
+                <option value="1">1 time (Recommended - best UX)</option>
+                <option value="2">2 times</option>
+                <option value="3">3 times</option>
+                <option value="unlimited">Unlimited</option>
               </select>
             </div>
           </div>
@@ -318,13 +309,13 @@ export const AdminAdvertisements: React.FC = () => {
         <table className="w-full text-left text-xs">
           <thead className="bg-gray-50 dark:bg-slate-950 text-gray-500 border-b border-gray-200 dark:border-slate-800 uppercase font-semibold">
             <tr>
-              <th className="py-3 px-4">বিজ্ঞাপন স্লট ও নাম</th>
-              <th className="py-3 px-3">প্রোভাইডার</th>
-              <th className="py-3 px-3">অবস্থান (Placement)</th>
-              <th className="py-3 px-3">মাত্রা (Size)</th>
-              <th className="py-3 px-3">স্ট্যাটাস</th>
-              <th className="py-3 px-3">ইমপ্রেশন / ক্লিক</th>
-              <th className="py-3 px-4 text-right">অ্যাকশন</th>
+              <th className="py-3 px-4">Ad Slot Name</th>
+              <th className="py-3 px-3">Provider</th>
+              <th className="py-3 px-3">Placement</th>
+              <th className="py-3 px-3">Dimensions</th>
+              <th className="py-3 px-3">Status</th>
+              <th className="py-3 px-3">Impressions / Clicks</th>
+              <th className="py-3 px-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
@@ -351,29 +342,48 @@ export const AdminAdvertisements: React.FC = () => {
                         status: ad.status === 'active' ? 'paused' : 'active'
                       })
                     }
-                    className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer ${
                       ad.status === 'active'
                         ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
                         : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300'
                     }`}
                   >
-                    {ad.status === 'active' ? 'সক্রিয় (Active)' : 'স্থগিত (Paused)'}
+                    {ad.status === 'active' ? 'Active' : 'Paused'}
                   </button>
                 </td>
                 <td className="py-3 px-3 font-mono">
-                  {toBengaliNumber(ad.impressions)} / {toBengaliNumber(ad.clicks)}
+                  {(ad.impressions || 0).toLocaleString()} / {(ad.clicks || 0).toLocaleString()}
                 </td>
                 <td className="py-3 px-4 text-right">
-                  <button
-                    onClick={() => {
-                      if (window.confirm('এই বিজ্ঞাপন স্লটটি মুছে ফেলতে চান?')) {
-                        deleteAdvertisement(ad.id);
-                      }
-                    }}
-                    className="p-1 text-gray-400 hover:text-red-600 rounded"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  {confirmDeleteId === ad.id ? (
+                    <div className="inline-flex items-center gap-1">
+                      <button
+                        onClick={() => {
+                          deleteAdvertisement(ad.id);
+                          setConfirmDeleteId(null);
+                        }}
+                        className="p-1 bg-red-600 text-white rounded cursor-pointer"
+                        title="Confirm delete"
+                      >
+                        <Check className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteId(null)}
+                        className="p-1 text-gray-400 hover:text-gray-600 cursor-pointer"
+                        title="Cancel"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmDeleteId(ad.id)}
+                      className="p-1 text-gray-400 hover:text-red-600 rounded cursor-pointer"
+                      title="Delete ad slot"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

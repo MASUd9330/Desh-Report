@@ -7,25 +7,25 @@ import {
   Upload,
   RotateCcw,
   Check,
-  Globe,
-  Shield,
-  Server,
-  Cloud
+  Cloud,
+  X
 } from 'lucide-react';
 
 export const AdminSettings: React.FC = () => {
   const { siteSettings, updateSiteSettings, resetToDefaultData, exportDataAsJson, importDataFromJson } = useNews();
 
-  const [siteName, setSiteName] = useState(siteSettings.siteName);
-  const [tagline, setTagline] = useState(siteSettings.tagline);
-  const [description, setDescription] = useState(siteSettings.description);
-  const [contactEmail, setContactEmail] = useState(siteSettings.contactEmail);
-  const [contactPhone, setContactPhone] = useState(siteSettings.contactPhone);
-  const [contactAddress, setContactAddress] = useState(siteSettings.contactAddress);
-  const [googleAnalyticsId, setGoogleAnalyticsId] = useState(siteSettings.googleAnalyticsId);
-  const [googleSearchConsoleCode, setGoogleSearchConsoleCode] = useState(siteSettings.googleSearchConsoleCode);
+  const [siteName, setSiteName] = useState(siteSettings?.siteName || 'DeshReport');
+  const [tagline, setTagline] = useState(siteSettings?.tagline || 'Leading Digital News Portal');
+  const [description, setDescription] = useState(siteSettings?.description || '');
+  const [contactEmail, setContactEmail] = useState(siteSettings?.contactEmail || 'contact@deshreport.com');
+  const [contactPhone, setContactPhone] = useState(siteSettings?.contactPhone || '+880 1712-345678');
+  const [contactAddress, setContactAddress] = useState(siteSettings?.contactAddress || 'Karwan Bazar, Dhaka-1215, Bangladesh');
+  const [googleAnalyticsId, setGoogleAnalyticsId] = useState(siteSettings?.googleAnalyticsId || '');
+  const [googleSearchConsoleCode, setGoogleSearchConsoleCode] = useState(siteSettings?.googleSearchConsoleCode || '');
 
   const [saved, setSaved] = useState(false);
+  const [importNotice, setImportNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [confirmReset, setConfirmReset] = useState(false);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,10 +52,13 @@ export const AdminSettings: React.FC = () => {
       if (content) {
         const success = importDataFromJson(content);
         if (success) {
-          alert('ডেটা ব্যাকআপ সফলভাবে ইমপোর্ট ও রিস্টোর করা হয়েছে!');
-          window.location.reload();
+          setImportNotice({ type: 'success', message: 'Data backup successfully imported and restored! Reloading...' });
+          setTimeout(() => {
+            window.location.reload();
+          }, 1200);
         } else {
-          alert('ভুল ফাইল ফরমেট। অনুগ্রহ করে সঠিক JSON ব্যাকআপ ফাইল নির্বাচন করুন।');
+          setImportNotice({ type: 'error', message: 'Invalid file format. Please choose a valid DeshReport JSON backup file.' });
+          setTimeout(() => setImportNotice(null), 4000);
         }
       }
     };
@@ -65,19 +68,31 @@ export const AdminSettings: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="pb-4 border-b border-gray-200 dark:border-slate-800">
-        <h1 className="text-2xl font-bold font-serif-bn text-gray-900 dark:text-white flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <Settings className="w-6 h-6 text-gray-600 dark:text-gray-400" />
-          <span>সাইট কনফিগারেশন ও ব্যাকআপ (System Settings)</span>
+          <span>System Settings & Data Backup</span>
         </h1>
         <p className="text-xs text-gray-500 mt-0.5">
-          পোর্টালের সাধারণ তথ্য, গুগল ইন্টিগ্রেশন, ডাটাবেজ ব্যাকআপ ও নেটলিফাই ডেপ্লয়মেন্ট
+          Portal metadata, Google tracking, database backup/restore, and deployment guide
         </p>
       </div>
 
       {saved && (
-        <div className="p-3 bg-emerald-50 text-emerald-800 rounded-lg text-xs font-semibold flex items-center gap-2">
+        <div className="p-3 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 rounded-lg text-xs font-semibold flex items-center gap-2">
           <Check className="w-4 h-4 text-emerald-600" />
-          <span>সাইট কনফিগারেশন সফলভাবে আপডেট করা হয়েছে!</span>
+          <span>Site settings successfully updated!</span>
+        </div>
+      )}
+
+      {importNotice && (
+        <div
+          className={`p-3 rounded-lg text-xs font-semibold flex items-center gap-2 ${
+            importNotice.type === 'success'
+              ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+              : 'bg-red-50 text-red-800 dark:bg-red-950/60 dark:text-red-300'
+          }`}
+        >
+          <span>{importNotice.message}</span>
         </div>
       )}
 
@@ -86,80 +101,80 @@ export const AdminSettings: React.FC = () => {
         {/* Site Identity */}
         <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-6 shadow-xs space-y-4">
           <h3 className="font-bold text-sm text-gray-900 dark:text-white border-b border-gray-100 dark:border-slate-800 pb-2">
-            পোর্টাল পরিচিতি ও ব্র্যান্ডিং
+            Portal Identity & Branding
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div>
               <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                সাইটের নাম (Site Name)
+                Portal Name (Site Title) *
               </label>
               <input
                 type="text"
                 required
                 value={siteName}
                 onChange={e => setSiteName(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:border-indigo-500"
               />
             </div>
             <div>
               <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                ট্যাগলাইন (Tagline)
+                Tagline *
               </label>
               <input
                 type="text"
                 required
                 value={tagline}
                 onChange={e => setTagline(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:border-indigo-500"
               />
             </div>
           </div>
 
           <div className="text-xs">
             <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-1">
-              সাইট মেটা ডেসক্রিপশন (Meta Description)
+              Site Meta Description (SEO)
             </label>
             <textarea
               rows={2}
               value={description}
               onChange={e => setDescription(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:border-indigo-500"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
             <div>
               <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                যোগাযোগের ইমেইল
+                Contact Email
               </label>
               <input
                 type="email"
                 value={contactEmail}
                 onChange={e => setContactEmail(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden"
               />
             </div>
             <div>
               <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                যোগাযোগের ফোন
+                Contact Phone
               </label>
               <input
                 type="text"
                 value={contactPhone}
                 onChange={e => setContactPhone(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden"
               />
             </div>
             <div>
               <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                বার্তা কার্যালয়ের ঠিকানা
+                Newsroom Office Address
               </label>
               <input
                 type="text"
                 value={contactAddress}
                 onChange={e => setContactAddress(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-hidden"
               />
             </div>
           </div>
@@ -168,7 +183,7 @@ export const AdminSettings: React.FC = () => {
         {/* Analytics & Search Console */}
         <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-6 shadow-xs space-y-4">
           <h3 className="font-bold text-sm text-gray-900 dark:text-white border-b border-gray-100 dark:border-slate-800 pb-2">
-            গুগল টুলস ইন্টিগ্রেশন (Google Services)
+            Google Tracking & Console Integration
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
@@ -181,7 +196,7 @@ export const AdminSettings: React.FC = () => {
                 value={googleAnalyticsId}
                 onChange={e => setGoogleAnalyticsId(e.target.value)}
                 placeholder="G-XXXXXXXXXX"
-                className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg font-mono"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg font-mono focus:outline-hidden"
               />
             </div>
 
@@ -194,7 +209,7 @@ export const AdminSettings: React.FC = () => {
                 value={googleSearchConsoleCode}
                 onChange={e => setGoogleSearchConsoleCode(e.target.value)}
                 placeholder="google-site-verification=..."
-                className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg font-mono"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg font-mono focus:outline-hidden"
               />
             </div>
           </div>
@@ -202,34 +217,34 @@ export const AdminSettings: React.FC = () => {
 
         <button
           type="submit"
-          className="flex items-center gap-1.5 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs shadow-xs"
+          className="flex items-center gap-1.5 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-xs cursor-pointer"
         >
           <Save className="w-4 h-4" />
-          <span>পরিবর্তন সংরক্ষণ করুন</span>
+          <span>Save System Settings</span>
         </button>
       </form>
 
       {/* Data Backup & Portability */}
       <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-6 shadow-xs space-y-4">
         <h3 className="font-bold text-sm text-gray-900 dark:text-white border-b border-gray-100 dark:border-slate-800 pb-2">
-          ডাটাবেজ এক্সপোর্ট ও ব্যাকআপ (Database Portability)
+          Database Export, Backup & Portability
         </h3>
         <p className="text-xs text-gray-500">
-          আপনার সকল প্রকাশিত সংবাদ, সেটিংস ও মিডিয়া লাইব্রেরির সম্পূর্ণ ব্যাকআপ এক ক্লিকে ডাউনলোড বা রিস্টোর করুন।
+          Download complete JSON snapshots of all news articles, categories, media assets, ads, and settings.
         </p>
 
-        <div className="flex flex-wrap gap-3 pt-2">
+        <div className="flex flex-wrap items-center gap-3 pt-2">
           <button
             onClick={exportDataAsJson}
-            className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs"
+            className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer"
           >
             <Download className="w-4 h-4" />
-            <span>সম্পূর্ণ JSON ব্যাকআপ ডাউনলোড করুন</span>
+            <span>Download JSON Backup</span>
           </button>
 
           <label className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer">
             <Upload className="w-4 h-4" />
-            <span>ব্যাকআপ ফাইল থেকে রিস্টোর করুন</span>
+            <span>Restore From Backup File</span>
             <input
               type="file"
               accept=".json"
@@ -238,17 +253,34 @@ export const AdminSettings: React.FC = () => {
             />
           </label>
 
-          <button
-            onClick={() => {
-              if (window.confirm('সকল টেস্ট ডেটা প্রাথমিক ডেমো অবস্থায় ফিরিয়ে আনতে চান?')) {
-                resetToDefaultData();
-              }
-            }}
-            className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-semibold"
-          >
-            <RotateCcw className="w-4 h-4" />
-            <span>ডেমো ডেটা রিসেট</span>
-          </button>
+          {confirmReset ? (
+            <div className="inline-flex items-center gap-2 bg-red-50 dark:bg-red-950/40 p-1.5 rounded-lg border border-red-200 dark:border-red-900">
+              <span className="text-xs text-red-700 dark:text-red-300 font-semibold">Reset to default demo data?</span>
+              <button
+                onClick={() => {
+                  resetToDefaultData();
+                  setConfirmReset(false);
+                }}
+                className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-bold cursor-pointer"
+              >
+                Yes, Reset
+              </button>
+              <button
+                onClick={() => setConfirmReset(false)}
+                className="p-1 text-gray-500 hover:text-gray-700 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmReset(true)}
+              className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-semibold cursor-pointer"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Reset Demo Data</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -257,16 +289,16 @@ export const AdminSettings: React.FC = () => {
         <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
           <Cloud className="w-5 h-5 text-cyan-400" />
           <h3 className="font-bold text-sm text-white">
-            Netlify প্রোডাকশন ডেপ্লয়মেন্ট নির্দেশিকা (Production Ready)
+            Netlify Production Deployment Guide
           </h3>
         </div>
         <p className="text-xs text-slate-400 leading-relaxed">
-          দেশরিপোর্ট প্রজেক্টটি আধুনিক Vite + React একক-পেজ অ্যাপ আর্কিটেকচারে অপটিমাইজ করা। নেটলিফাইতে ডেপ্লয় করতে:
+          The DeshReport platform is optimized as a modern Vite + React single-page application.
         </p>
         <div className="p-3 bg-slate-950 rounded-lg font-mono text-[11px] text-cyan-300 space-y-1">
           <div># Build Command: npm run build</div>
           <div># Publish Directory: dist</div>
-          <div># SPA Fallback Rule: public/_redirects created with /* /index.html 200</div>
+          <div># SPA Fallback: public/_redirects configured with /* /index.html 200</div>
         </div>
       </div>
     </div>

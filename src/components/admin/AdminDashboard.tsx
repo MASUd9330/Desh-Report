@@ -1,34 +1,29 @@
 import React, { useState } from 'react';
 import { useNews } from '../../context/NewsContext';
-import { toBengaliNumber, formatRelativeBanglaTime } from '../../utils/helpers';
 import {
   FileText,
   CheckCircle,
   Clock,
   Flame,
-  FolderTree,
-  Eye,
   TrendingUp,
   PlusCircle,
-  Share2,
   ExternalLink,
   Bot,
   Megaphone,
   Smartphone,
   Laptop,
   Tablet,
-  Search,
   Activity
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
   const {
-    articles,
-    breakingNews,
-    categories,
-    advertisements,
-    automationSources,
-    activityLogs,
+    articles = [],
+    breakingNews = [],
+    categories = [],
+    advertisements = [],
+    automationSources = [],
+    activityLogs = [],
     setAdminSection,
     navigateToArticle,
     navigateToHome
@@ -47,33 +42,31 @@ export const AdminDashboard: React.FC = () => {
   const totalViews = articles.reduce((acc, curr) => acc + (curr.viewCount || 0), 0);
   const todayViews = Math.floor(totalViews * 0.28);
 
-  const mostViewed = [...articles].sort((a, b) => b.viewCount - a.viewCount)[0];
-
   // Chart data simulator based on selected time range
   const chartData = {
     daily: [
-      { label: '০০:০০', views: 1200 },
-      { label: '০৪:০০', views: 800 },
-      { label: '০৮:০০', views: 4500 },
-      { label: '১২:০০', views: 6800 },
-      { label: '১৬:০০', views: 5900 },
-      { label: '২০:০০', views: 8400 },
-      { label: '২৩:৫৯', views: 3600 }
+      { label: '00:00', views: 1200 },
+      { label: '04:00', views: 800 },
+      { label: '08:00', views: 4500 },
+      { label: '12:00', views: 6800 },
+      { label: '16:00', views: 5900 },
+      { label: '20:00', views: 8400 },
+      { label: '23:59', views: 3600 }
     ],
     weekly: [
-      { label: 'শনিবার', views: 24500 },
-      { label: 'রবিবার', views: 28900 },
-      { label: 'সোমবার', views: 31200 },
-      { label: 'মঙ্গলবার', views: 29800 },
-      { label: 'বুধবার', views: 33400 },
-      { label: 'বৃহস্পতিবার', views: 36500 },
-      { label: 'শুক্রবার', views: 42100 }
+      { label: 'Sat', views: 24500 },
+      { label: 'Sun', views: 28900 },
+      { label: 'Mon', views: 31200 },
+      { label: 'Tue', views: 29800 },
+      { label: 'Wed', views: 33400 },
+      { label: 'Thu', views: 36500 },
+      { label: 'Fri', views: 42100 }
     ],
     monthly: [
-      { label: 'সপ্তাহ ১', views: 185000 },
-      { label: 'সপ্তাহ ২', views: 210000 },
-      { label: 'সপ্তাহ ৩', views: 198000 },
-      { label: 'সপ্তাহ ৪', views: 245000 }
+      { label: 'Week 1', views: 185000 },
+      { label: 'Week 2', views: 210000 },
+      { label: 'Week 3', views: 198000 },
+      { label: 'Week 4', views: 245000 }
     ]
   }[timeRange];
 
@@ -86,31 +79,36 @@ export const AdminDashboard: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-              BENTO GRID DASHBOARD
+              EDITORIAL CMS OVERVIEW
             </span>
           </div>
-          <h1 className="text-2xl font-bold font-serif-bn text-slate-900 dark:text-white">
-            অ্যাডমিন ড্যাশবোর্ড (Editorial CMS)
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+            Editorial CMS Dashboard
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            দেশরিপোর্ট ডিজিটাল নিউজরুম ও সম্পাদকীয় নিয়ন্ত্রণ কেন্দ্র
+            DeshReport Digital Newsroom Operations & Content Command Center
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setAdminSection('news', 'add')}
-            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-600/20 transition-all"
+            onClick={() => {
+              try {
+                localStorage.removeItem('deshreport_editing_id');
+              } catch (_) {}
+              setAdminSection('news', 'add');
+            }}
+            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-600/20 transition-all cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>নতুন সংবাদ তৈরি করুন</span>
+            <span>+ Create Article</span>
           </button>
           <button
             onClick={navigateToHome}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-colors border border-transparent dark:border-slate-700/60"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-colors border border-transparent dark:border-slate-700/60 cursor-pointer"
           >
             <ExternalLink className="w-3.5 h-3.5" />
-            <span>লাইভ সাইট দেখুন</span>
+            <span>View Live Site</span>
           </button>
         </div>
       </div>
@@ -124,23 +122,23 @@ export const AdminDashboard: React.FC = () => {
               <div className="flex items-center gap-2 mb-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                 <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">
-                  লাইভ সিস্টেম মনিটরিং
+                  LIVE SYSTEM MONITORING
                 </span>
               </div>
-              <h2 className="text-lg font-bold font-serif-bn text-white">
-                আজকের পাঠক ট্রাফিক ও অপারেশনাল নিয়ন্ত্রণ
+              <h2 className="text-lg font-bold text-white">
+                Reader Traffic & Newsroom Velocity
               </h2>
               <p className="text-xs text-slate-400 mt-1 max-w-md">
-                রিয়েল-টাইম পাঠক বৃদ্ধি, স্বয়ংক্রিয় এডিটিং পাইপলাইন ও বিজ্ঞাপন কার্যকারিতা সারসংক্ষেপ
+                Real-time audience monitoring, automated ingestion pipeline, and monetization status summary
               </p>
             </div>
 
             <div className="hidden sm:flex flex-col items-end">
-              <span className="text-[11px] text-indigo-300 font-medium">আজকের অ্যাক্টিভ রিডার্স</span>
+              <span className="text-[11px] text-indigo-300 font-medium">Active Readers Today</span>
               <span className="text-2xl font-black text-white font-mono">
-                {toBengaliNumber(todayViews)}
+                {todayViews.toLocaleString()}
               </span>
-              <span className="text-[10px] text-emerald-400 font-semibold mt-0.5">+১২.৪% বৃদ্ধি</span>
+              <span className="text-[10px] text-emerald-400 font-semibold mt-0.5">+12.4% vs yesterday</span>
             </div>
           </div>
 
@@ -148,26 +146,26 @@ export const AdminDashboard: React.FC = () => {
           <div className="mt-6 pt-4 border-t border-slate-800/80 flex flex-wrap items-center gap-2">
             <button
               onClick={() => setAdminSection('breaking')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 border border-pink-500/30 text-xs font-medium transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 border border-pink-500/30 text-xs font-medium transition-colors cursor-pointer"
             >
               <Flame className="w-3.5 h-3.5 text-pink-400" />
-              <span>ব্রেকিং অ্যালার্ট ({toBengaliNumber(activeBreakingCount)})</span>
+              <span>Breaking Alerts ({activeBreakingCount})</span>
             </button>
 
             <button
               onClick={() => setAdminSection('automation')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-medium transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-medium transition-colors cursor-pointer"
             >
               <Bot className="w-3.5 h-3.5 text-cyan-400" />
-              <span>অটোমেশন সিঙ্ক ({toBengaliNumber(automationSources.length)})</span>
+              <span>Automation Feeds ({automationSources.length})</span>
             </button>
 
             <button
               onClick={() => setAdminSection('analytics')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-medium transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-medium transition-colors cursor-pointer"
             >
               <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
-              <span>মোট ভিউ: {toBengaliNumber(totalViews)}</span>
+              <span>Total Views: {totalViews.toLocaleString()}</span>
             </button>
           </div>
         </div>
@@ -179,15 +177,15 @@ export const AdminDashboard: React.FC = () => {
         >
           <div>
             <div className="flex items-center justify-between text-slate-500 mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">মোট সংবাদ</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Articles</span>
               <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                 <FileText className="w-4 h-4" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-slate-900 dark:text-white font-serif-bn">
-              {toBengaliNumber(totalArticles)}
+            <div className="text-3xl font-bold text-slate-900 dark:text-white font-mono">
+              {totalArticles}
             </div>
-            <span className="text-[11px] text-slate-400 mt-1 block">সকল ক্যাটাগরি মিলিয়ে ডাটাবেস</span>
+            <span className="text-[11px] text-slate-400 mt-1 block">Across all editorial categories</span>
           </div>
           <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-4 overflow-hidden">
             <div className="bg-indigo-500 h-full rounded-full" style={{ width: '85%' }} />
@@ -201,16 +199,16 @@ export const AdminDashboard: React.FC = () => {
         >
           <div>
             <div className="flex items-center justify-between text-slate-500 mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">প্রকাশিত লাইভ</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Published Live</span>
               <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                 <CheckCircle className="w-4 h-4" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 font-serif-bn">
-              {toBengaliNumber(publishedCount)}
+            <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+              {publishedCount}
             </div>
             <span className="text-[11px] text-emerald-600/80 dark:text-emerald-400/80 mt-1 block">
-              অনলাইনে পাঠকদের জন্য দৃশ্যমান
+              Active and visible to readers
             </span>
           </div>
           <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-4 overflow-hidden">
@@ -218,22 +216,22 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Bento Tile 4: Drafts & Pending */}
+        {/* Bento Tile 4: Drafts */}
         <div 
           onClick={() => setAdminSection('news', 'draft')}
           className="cursor-pointer bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800/90 rounded-2xl p-5 shadow-xs hover:border-amber-500/50 hover:shadow-md transition-all flex flex-col justify-between group"
         >
           <div>
             <div className="flex items-center justify-between text-slate-500 mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">খসড়া পাইপলাইন</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Draft Pipeline</span>
               <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 dark:text-amber-400 group-hover:bg-amber-600 group-hover:text-white transition-colors">
                 <Clock className="w-4 h-4" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-amber-600 dark:text-amber-400 font-serif-bn">
-              {toBengaliNumber(draftCount)}
+            <div className="text-3xl font-bold text-amber-600 dark:text-amber-400 font-mono">
+              {draftCount}
             </div>
-            <span className="text-[11px] text-slate-400 mt-1 block">রিভিউ ও এডিটিং প্রক্রিয়াধীন</span>
+            <span className="text-[11px] text-slate-400 mt-1 block">Under review & editorial editing</span>
           </div>
           <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-4 overflow-hidden">
             <div className="bg-amber-500 h-full rounded-full" style={{ width: '40%' }} />
@@ -247,15 +245,15 @@ export const AdminDashboard: React.FC = () => {
         >
           <div>
             <div className="flex items-center justify-between text-slate-500 mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">ব্রেকিং নিউজ</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Breaking Tickers</span>
               <div className="p-2 rounded-xl bg-pink-500/10 text-pink-500 dark:text-pink-400 group-hover:bg-pink-600 group-hover:text-white transition-colors">
                 <Flame className="w-4 h-4" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-pink-600 dark:text-pink-400 font-serif-bn">
-              {toBengaliNumber(activeBreakingCount)}
+            <div className="text-3xl font-bold text-pink-600 dark:text-pink-400 font-mono">
+              {activeBreakingCount}
             </div>
-            <span className="text-[11px] text-pink-500/80 mt-1 block">সক্রিয় লাল স্ক্রলবার টিকারে লাইভ</span>
+            <span className="text-[11px] text-pink-500/80 mt-1 block">Active on top red ticker bar</span>
           </div>
           <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-4 overflow-hidden">
             <div className="bg-pink-500 h-full rounded-full" style={{ width: '70%' }} />
@@ -269,15 +267,15 @@ export const AdminDashboard: React.FC = () => {
         >
           <div>
             <div className="flex items-center justify-between text-slate-500 mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">বিজ্ঞাপন ও Adsterra</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Adsterra & Banners</span>
               <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500 dark:text-purple-400 group-hover:bg-purple-600 group-hover:text-white transition-colors">
                 <Megaphone className="w-4 h-4" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 font-serif-bn">
-              {toBengaliNumber(activeAdsCount)}
+            <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 font-mono">
+              {activeAdsCount}
             </div>
-            <span className="text-[11px] text-slate-400 mt-1 block">সক্রিয় অ্যাড ব্যানার ও পপআন্ডার</span>
+            <span className="text-[11px] text-slate-400 mt-1 block">Active display & popunder units</span>
           </div>
           <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-4 overflow-hidden">
             <div className="bg-purple-500 h-full rounded-full" style={{ width: '80%' }} />
@@ -291,15 +289,15 @@ export const AdminDashboard: React.FC = () => {
         >
           <div>
             <div className="flex items-center justify-between text-slate-500 mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">অটোমেশন সিঙ্ক</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Automation Feeds</span>
               <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-500 dark:text-cyan-400 group-hover:bg-cyan-600 group-hover:text-white transition-colors">
                 <Bot className="w-4 h-4" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-cyan-600 dark:text-cyan-400 font-serif-bn">
-              {toBengaliNumber(automationSources.length)}
+            <div className="text-3xl font-bold text-cyan-600 dark:text-cyan-400 font-mono">
+              {automationSources.length}
             </div>
-            <span className="text-[11px] text-slate-400 mt-1 block">সক্রিয় RSS / API ফিড সোর্স</span>
+            <span className="text-[11px] text-slate-400 mt-1 block">Active RSS & Wire feeds</span>
           </div>
           <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-4 overflow-hidden">
             <div className="bg-cyan-500 h-full rounded-full" style={{ width: '65%' }} />
@@ -316,41 +314,41 @@ export const AdminDashboard: React.FC = () => {
               <div>
                 <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Activity className="w-4 h-4 text-indigo-500" />
-                  <span>পাঠক ট্রাফিক ট্রেন্ডস (Audience Analytics)</span>
+                  <span>Audience Traffic & Reading Trends</span>
                 </h2>
-                <span className="text-xs text-slate-400">প্রতিবেদনের পাঠক ভিউ ও এনগেজমেন্ট সময়ের বিশ্লেষণ</span>
+                <span className="text-xs text-slate-400">Chronological engagement & article view volume</span>
               </div>
 
               <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/90 p-1 rounded-xl text-xs border border-transparent dark:border-slate-700/60">
                 <button
                   onClick={() => setTimeRange('daily')}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${
+                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                     timeRange === 'daily'
                       ? 'bg-white dark:bg-slate-700 font-bold shadow-xs text-indigo-600 dark:text-indigo-300'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  আজকে (Daily)
+                  Today
                 </button>
                 <button
                   onClick={() => setTimeRange('weekly')}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${
+                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                     timeRange === 'weekly'
                       ? 'bg-white dark:bg-slate-700 font-bold shadow-xs text-indigo-600 dark:text-indigo-300'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  এ সপ্তাহ (Weekly)
+                  This Week
                 </button>
                 <button
                   onClick={() => setTimeRange('monthly')}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${
+                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                     timeRange === 'monthly'
                       ? 'bg-white dark:bg-slate-700 font-bold shadow-xs text-indigo-600 dark:text-indigo-300'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  এ মাস (Monthly)
+                  This Month
                 </button>
               </div>
             </div>
@@ -362,7 +360,7 @@ export const AdminDashboard: React.FC = () => {
                 return (
                   <div key={i} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
                     <span className="text-[10px] font-mono text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-slate-900 dark:bg-slate-800 text-white px-1.5 py-0.5 rounded">
-                      {toBengaliNumber(bar.views)}
+                      {bar.views.toLocaleString()}
                     </span>
                     <div className="w-full bg-slate-100 dark:bg-slate-800/80 rounded-t-lg h-full flex items-end overflow-hidden">
                       <div
@@ -382,16 +380,16 @@ export const AdminDashboard: React.FC = () => {
           {/* Bento Summary Strip */}
           <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800/80 grid grid-cols-3 gap-3 text-center text-xs">
             <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40">
-              <span className="text-[10px] text-slate-400 block mb-0.5">গড় পাঠকাল</span>
-              <strong className="text-slate-800 dark:text-slate-200">৩ মি. ৪৫ সে.</strong>
+              <span className="text-[10px] text-slate-400 block mb-0.5">Average Read Time</span>
+              <strong className="text-slate-800 dark:text-slate-200">3m 45s</strong>
             </div>
             <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40">
-              <span className="text-[10px] text-slate-400 block mb-0.5">বাউন্স রেট</span>
-              <strong className="text-emerald-600 dark:text-emerald-400">২৩.৮%</strong>
+              <span className="text-[10px] text-slate-400 block mb-0.5">Bounce Rate</span>
+              <strong className="text-emerald-600 dark:text-emerald-400">23.8%</strong>
             </div>
             <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40">
-              <span className="text-[10px] text-slate-400 block mb-0.5">পিক ট্রাফিক সময়</span>
-              <strong className="text-indigo-600 dark:text-indigo-400">রাত ৮:০০ - ১০:০০</strong>
+              <span className="text-[10px] text-slate-400 block mb-0.5">Peak Traffic Window</span>
+              <strong className="text-indigo-600 dark:text-indigo-400">8:00 PM - 10:30 PM</strong>
             </div>
           </div>
         </div>
@@ -401,7 +399,7 @@ export const AdminDashboard: React.FC = () => {
           {/* Device Distribution */}
           <div>
             <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-3">
-              ডিভাইস ট্রাফিক বিন্যাস
+              Device Distribution
             </h3>
 
             <div className="space-y-3.5 text-xs">
@@ -409,9 +407,9 @@ export const AdminDashboard: React.FC = () => {
                 <div className="flex items-center justify-between text-slate-700 dark:text-slate-300 mb-1.5">
                   <span className="flex items-center gap-1.5">
                     <Smartphone className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>মোবাইল ব্রাউজার</span>
+                    <span>Mobile Browsers</span>
                   </span>
-                  <span className="font-bold">৬৮.৪%</span>
+                  <span className="font-bold font-mono">68.4%</span>
                 </div>
                 <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div className="h-full bg-indigo-500 rounded-full" style={{ width: '68.4%' }} />
@@ -422,9 +420,9 @@ export const AdminDashboard: React.FC = () => {
                 <div className="flex items-center justify-between text-slate-700 dark:text-slate-300 mb-1.5">
                   <span className="flex items-center gap-1.5">
                     <Laptop className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>ডেস্কটপ / ল্যাপটপ</span>
+                    <span>Desktop / Laptops</span>
                   </span>
-                  <span className="font-bold">২৫.৮%</span>
+                  <span className="font-bold font-mono">25.8%</span>
                 </div>
                 <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div className="h-full bg-emerald-500 rounded-full" style={{ width: '25.8%' }} />
@@ -435,9 +433,9 @@ export const AdminDashboard: React.FC = () => {
                 <div className="flex items-center justify-between text-slate-700 dark:text-slate-300 mb-1.5">
                   <span className="flex items-center gap-1.5">
                     <Tablet className="w-3.5 h-3.5 text-amber-400" />
-                    <span>ট্যাবলেট ও অন্যান্য</span>
+                    <span>Tablets & Others</span>
                   </span>
-                  <span className="font-bold">৫.৮%</span>
+                  <span className="font-bold font-mono">5.8%</span>
                 </div>
                 <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div className="h-full bg-amber-500 rounded-full" style={{ width: '5.8%' }} />
@@ -449,14 +447,14 @@ export const AdminDashboard: React.FC = () => {
           {/* Traffic Sources */}
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80">
             <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-3">
-              শীর্ষ ট্রাফিক উৎস (Referrers)
+              Top Referral Sources
             </h3>
             <div className="space-y-2 text-xs">
               {[
-                { source: 'Facebook (সামাজিক যোগাযোগ)', pct: '৪৬.২%', color: 'bg-indigo-500' },
-                { source: 'Google Search (অর্গানিক)', pct: '৩১.৫%', color: 'bg-emerald-500' },
-                { source: 'Direct (সরাসরি ব্রাউজ)', pct: '১৫.১%', color: 'bg-purple-500' },
-                { source: 'Telegram & Newsletters', pct: '৭.২%', color: 'bg-cyan-500' }
+                { source: 'Facebook (Social Sharing)', pct: '46.2%' },
+                { source: 'Google Search (Organic SEO)', pct: '31.5%' },
+                { source: 'Direct (Bookmarks / URL)', pct: '15.1%' },
+                { source: 'Telegram & Newsletters', pct: '7.2%' }
               ].map((item, idx) => (
                 <div key={idx} className="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800/60 last:border-b-0">
                   <span className="text-slate-600 dark:text-slate-400">{item.source}</span>
@@ -470,22 +468,22 @@ export const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Top Performing Articles Table & Recent Activity Logs Bento Section */}
+      {/* Top Performing Articles Table & Recent Activity Logs */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* Top 5 Articles Bento Box (7 Cols) */}
+        {/* Top Articles (7 Cols) */}
         <div className="lg:col-span-7 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800/90 rounded-2xl p-6 shadow-xs">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-indigo-500" />
               <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-                সর্বাধিক পঠিত খবর (Top Performing Articles)
+                Top Performing Articles
               </h3>
             </div>
             <button
               onClick={() => setAdminSection('news', 'all')}
-              className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-semibold"
+              className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-semibold cursor-pointer"
             >
-              সবগুলো দেখুন
+              View All Articles →
             </button>
           </div>
 
@@ -500,25 +498,26 @@ export const AdminDashboard: React.FC = () => {
                     <h4 
                       onClick={() => navigateToArticle(art.id)}
                       className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 truncate cursor-pointer"
+                      title={art.title}
                     >
                       {art.title}
                     </h4>
                     <span className="text-[11px] text-slate-400">
-                      {art.authorName} • {formatRelativeBanglaTime(art.publishedAt)}
+                      {art.authorName} • {new Date(art.publishedAt).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3 shrink-0">
                   <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
-                    {toBengaliNumber(art.viewCount)} ভিউ
+                    {(art.viewCount || 0).toLocaleString()} views
                   </span>
                   <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
                     art.status === 'published'
                       ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                       : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
                   }`}>
-                    {art.status === 'published' ? 'লাইভ' : 'খসড়া'}
+                    {art.status === 'published' ? 'Live' : 'Draft'}
                   </span>
                 </div>
               </div>
@@ -526,26 +525,26 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Recent Admin Activity Logs Bento Box (5 Cols) */}
+        {/* Recent Newsroom Logs (5 Cols) */}
         <div className="lg:col-span-5 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800/90 rounded-2xl p-6 shadow-xs">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
             <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
               <Clock className="w-4 h-4 text-indigo-500" />
-              <span>সাম্প্রতিক অ্যাক্টিভিটি (Newsroom Logs)</span>
+              <span>Newsroom Editorial Activity</span>
             </h3>
             <span className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">
-              রিয়েল-টাইম
+              Live Audit Trail
             </span>
           </div>
 
           <div className="space-y-3 text-xs">
-            {activityLogs.map((log) => (
+            {activityLogs.slice(0, 6).map((log) => (
               <div key={log.id} className="flex items-start gap-3 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                 <span className="w-2 h-2 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-slate-800 dark:text-slate-200 leading-snug">
                     <strong className="text-slate-950 dark:text-white font-semibold">{log.userName}</strong>{' '}
-                    <span>{log.action} করেছেন:</span>{' '}
+                    <span>{log.action}:</span>{' '}
                     <span className="text-indigo-600 dark:text-indigo-400 font-medium">"{log.entityTitle}"</span>
                   </p>
                   <span className="text-[10px] text-slate-400">{log.timestamp}</span>

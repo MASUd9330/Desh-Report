@@ -142,6 +142,15 @@ export interface DuplicateDetectionRule {
   actionOnDuplicate: 'reject' | 'mark_duplicate_draft';
 }
 
+export interface AutomationSettings {
+  similarityThreshold: number;
+  checkSourceUrl: boolean;
+  actionOnDuplicate: 'skip' | 'flag' | 'overwrite';
+  scheduleIntervalMinutes: number;
+  autoExtractImage: boolean;
+  autoAssignCategory: boolean;
+}
+
 export interface SiteSettings {
   siteName: string;
   taglineBn: string;

@@ -1,8 +1,10 @@
-// Bangla digits mapping
-export const toBengaliNumber = (num: number | string): string => {
+// Bangla digits mapping (null-safe)
+export const toBengaliNumber = (num?: number | string | null): string => {
+  if (num === undefined || num === null || num === '') return '০';
+  const str = num.toString();
+  if (str === 'NaN') return '০';
   const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-  return num
-    .toString()
+  return str
     .replace(/\d/g, (digit) => bnDigits[parseInt(digit, 10)])
     .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };
