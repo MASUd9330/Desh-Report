@@ -25,7 +25,8 @@ import {
   Sun,
   Menu,
   X,
-  PlusCircle
+  PlusCircle,
+  LogOut
 } from 'lucide-react';
 
 export const AdminLayout: React.FC = () => {
@@ -34,6 +35,7 @@ export const AdminLayout: React.FC = () => {
     adminSubSection,
     setAdminSection,
     navigateToHome,
+    logoutAdmin,
     darkMode,
     toggleDarkMode,
     currentUser
@@ -176,6 +178,14 @@ export const AdminLayout: React.FC = () => {
               <span className="hidden md:inline text-xs font-bold text-slate-800 dark:text-slate-200">
                 {currentUser.name.split(' ')[0]}
               </span>
+
+              <button
+                onClick={logoutAdmin}
+                className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer ml-1"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </header>

@@ -441,12 +441,15 @@ export const initialMedia: MediaItem[] = [
 ];
 
 export const initialAutomationSources: AutomationSource[] = [
+  // 1. National: BSS News
   {
     id: 'src-1',
     name: 'BSS News RSS Feed (বাংলাদেশ সংবাদ সংস্থা)',
     type: 'rss',
     url: 'https://www.bssnews.net/feed/rss',
     categoryId: 'national',
+    region: 'national',
+    description: 'জাতীয় বার্তা সংস্থা - সরকারি নীতি, অর্থনীতি ও উন্নয়নমূলক প্রতিবেদন',
     fetchIntervalMinutes: 30,
     status: 'active',
     autoPublish: false,
@@ -454,31 +457,115 @@ export const initialAutomationSources: AutomationSource[] = [
     articlesImported: 142,
     keywordFilters: ['বাংলাদেশ', 'ঢাকা', 'উন্নয়ন', 'পররাষ্ট্র']
   },
+  // 2. International: BBC Bangla
   {
     id: 'src-2',
-    name: 'Global Reuters World Wire (বাংলা অনুবাদক পাইপলাইন)',
+    name: 'BBC News Bangla (বিবিসি বাংলা আরএসএস)',
+    type: 'rss',
+    url: 'https://feeds.bbci.co.uk/bengali/rss.xml',
+    categoryId: 'international',
+    region: 'international',
+    description: 'আন্তর্জাতিক বিশ্বরাজনীতি, কূটনীতি ও বস্তুনিষ্ঠ তথ্যভিত্তিক সংবাদ',
+    fetchIntervalMinutes: 20,
+    status: 'active',
+    autoPublish: false,
+    lastFetchedAt: '২০২৬-০৩-০৪ ১১:০৫ পূর্বাহ্ন',
+    articlesImported: 215,
+    keywordFilters: ['আন্তর্জাতিক', 'কূটনীতি', 'জলবায়ু', 'জাতিসংঘ']
+  },
+  // 3. National: Prothom Alo
+  {
+    id: 'src-3',
+    name: 'Prothom Alo Top Feed (প্রথম আলো)',
+    type: 'rss',
+    url: 'https://www.prothomalo.com/feed',
+    categoryId: 'national',
+    region: 'national',
+    description: 'শীর্ষ জাতীয় দৈনিক - রাজনীতি, সাম্প্রতিক ও জনগুরুত্বপূর্ণ খবর',
+    fetchIntervalMinutes: 20,
+    status: 'active',
+    autoPublish: false,
+    lastFetchedAt: '২০২৬-০৩-০৪ ১০:৪৫ পূর্বাহ্ন',
+    articlesImported: 184,
+    keywordFilters: ['রাজনীতি', 'অর্থনীতি', 'শিক্ষা']
+  },
+  // 4. International: Reuters
+  {
+    id: 'src-4',
+    name: 'Reuters World News Wire (রয়টার্স ওয়ার্ল্ড ওয়্যার)',
     type: 'news_api',
-    url: 'https://api.reuters.com/v1/news/world',
+    url: 'https://www.reutersagency.com/feed/?best-topics=world&post_type=best',
     apiKey: 'ret_live_948291848201',
     categoryId: 'international',
-    fetchIntervalMinutes: 60,
+    region: 'international',
+    description: 'বিশ্বখ্যাত বার্তা সংস্থা - আন্তর্জাতিক অর্থবাজার, বাণিজ্য ও গ্লোবাল ইভেন্ট',
+    fetchIntervalMinutes: 30,
     status: 'active',
     autoPublish: false,
     lastFetchedAt: '২০২৬-০৩-০৪ ০৯:৩০ পূর্বাহ্ন',
-    articlesImported: 89,
-    keywordFilters: ['UN', 'Diplomacy', 'Global Economy']
+    articlesImported: 126,
+    keywordFilters: ['UN', 'Diplomacy', 'Global Economy', 'Trade']
   },
+  // 5. National: bdnews24
   {
-    id: 'src-3',
-    name: 'TechCrunch Asia-Pacific Feed',
+    id: 'src-5',
+    name: 'bdnews24.com Bangla (বিডিনিউজ২৪.কম)',
     type: 'rss',
-    url: 'https://techcrunch.com/region/asia/feed/',
-    categoryId: 'technology',
-    fetchIntervalMinutes: 120,
-    status: 'paused',
+    url: 'https://bangla.bdnews24.com/feed',
+    categoryId: 'national',
+    region: 'national',
+    description: 'প্রথম ২৪/৭ অনলাইন পত্রিকা - তাৎক্ষণিক ব্রেকিং ও বিচার-প্রশাসন সংবাদ',
+    fetchIntervalMinutes: 15,
+    status: 'active',
     autoPublish: false,
-    lastFetchedAt: '২০২৬-০৩-০৩ ১৮:০০ অপরাহ্ন',
-    articlesImported: 34
+    lastFetchedAt: '২০২৬-০৩-০৪ ১০:৫০ পূর্বাহ্ন',
+    articlesImported: 98,
+    keywordFilters: ['ব্রেকিং', 'আদালত', 'আইনশৃঙ্খলা']
+  },
+  // 6. International: Al Jazeera
+  {
+    id: 'src-6',
+    name: 'Al Jazeera International (আল জাজিরা)',
+    type: 'rss',
+    url: 'https://www.aljazeera.com/xml/rss/all.xml',
+    categoryId: 'international',
+    region: 'international',
+    description: 'মধ্যপ্রাচ্য ও বৈশ্বিক ভূরাজনীতি, মানবাধিকার ও মানবিক সংকট বিশ্লেষণ',
+    fetchIntervalMinutes: 25,
+    status: 'active',
+    autoPublish: false,
+    lastFetchedAt: '২০২৬-০৩-০৪ ০৮:২০ পূর্বাহ্ন',
+    articlesImported: 78
+  },
+  // 7. National: The Daily Star
+  {
+    id: 'src-7',
+    name: 'The Daily Star (দ্য ডেইলি স্টার ফ্রন্টপেজ)',
+    type: 'rss',
+    url: 'https://www.thedailystar.net/frontpage/rss.xml',
+    categoryId: 'business',
+    region: 'national',
+    description: 'ইংরেজি শীর্ষ দৈনিক - ম্যাক্রো অর্থনীতি, রপ্তানি বাণিজ্য ও শিল্প বিশ্লেষণ',
+    fetchIntervalMinutes: 45,
+    status: 'active',
+    autoPublish: false,
+    lastFetchedAt: '২০২৬-০৩-০৪ ০৯:০০ পূর্বাহ্ন',
+    articlesImported: 64
+  },
+  // 8. International: DW Bangla
+  {
+    id: 'src-8',
+    name: 'DW Bangla (ডয়েচে ভেলে বাংলা)',
+    type: 'rss',
+    url: 'https://rss.dw.com/rdf/rss-ben-all',
+    categoryId: 'international',
+    region: 'international',
+    description: 'ইউরোপের রাজনীতি, পরিবেশ বিজ্ঞান ও বিশ্ব সংস্কৃতির বাংলা ফিড',
+    fetchIntervalMinutes: 40,
+    status: 'active',
+    autoPublish: false,
+    lastFetchedAt: '২০২৬-০৩-০৪ ০৭:১৫ পূর্বাহ্ন',
+    articlesImported: 52
   }
 ];
 

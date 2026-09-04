@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NewsProvider, useNews } from './context/NewsContext';
 import { Header } from './components/common/Header';
 import { Footer } from './components/common/Footer';
@@ -12,7 +12,12 @@ import { StaticPageView } from './components/portal/StaticPageView';
 import { SearchModal } from './components/portal/SearchModal';
 import { AdSlot } from './components/ads/AdSlot';
 import { AdminLayout } from './components/admin/AdminLayout';
-import { Mail, Clock, SunMedium, CloudSun } from 'lucide-react';
+import { AdminLogin } from './components/admin/AdminLogin';
+import { RegionalSection } from './components/portal/RegionalSection';
+import { VideoSection } from './components/portal/VideoSection';
+import { OpinionSection } from './components/portal/OpinionSection';
+import { PhotoStorySection } from './components/portal/PhotoStorySection';
+import { Mail, Clock, SunMedium, CloudSun, CheckCircle2, TrendingUp } from 'lucide-react';
 
 const PortalView: React.FC = () => {
   const {
@@ -22,10 +27,28 @@ const PortalView: React.FC = () => {
     categories
   } = useNews();
 
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterSubmitted, setNewsletterSubmitted] = useState(false);
+
   // Scroll to top when view changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeArticleId, activeCategorySlug, activePageSlug]);
+
+  const handleNewsletterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsletterEmail) return;
+    setNewsletterSubmitted(true);
+    setTimeout(() => {
+      setNewsletterEmail('');
+      setNewsletterSubmitted(false);
+    }, 4500);
+  };
+
+  // Group categories into thematic clusters for balanced editorial flow
+  const firstBatchCategories = categories.slice(0, 2); // National, Politics
+  const secondBatchCategories = categories.slice(2, 5); // Economy, International, Sports
+  const thirdBatchCategories = categories.slice(5); // Entertainment, Tech, Lifestyle, etc.
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fbfbfb] dark:bg-slate-950 text-gray-900 dark:text-gray-100 font-sans-bn transition-colors">
@@ -51,27 +74,22 @@ const PortalView: React.FC = () => {
         ) : (
           /* Homepage */
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
-            {/* Hero Section */}
+            {/* 1. Hero Spotlight Section */}
             <HeroSection />
 
             {/* In-feed Billboard Banner */}
             <AdSlot placement="between_cards" />
 
-            {/* Main Portal 2-Column Layout */}
+            {/* 2. Main Portal Grid 1: Top Category Blocks & Regional District Desk */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               {/* Main 8 Columns: Category Sections */}
-              <div className="lg:col-span-8 space-y-10">
-                {categories.map((cat, idx) => (
-                  <React.Fragment key={cat.id}>
-                    <CategoryBlock category={cat} />
-                    {/* Insert mid-feed banner after 2nd category */}
-                    {idx === 1 && (
-                      <div className="my-6">
-                        <AdSlot placement="in_article" />
-                      </div>
-                    )}
-                  </React.Fragment>
+              <div className="lg:col-span-8 space-y-8">
+                {firstBatchCategories.map(cat => (
+                  <CategoryBlock key={cat.id} category={cat} />
                 ))}
+
+                {/* NEW SECTION 1: Regional & District News (সারাদেশ ও ৬৪ জেলার সংবাদ) */}
+                <RegionalSection />
               </div>
 
               {/* Sidebar 4 Columns */}
@@ -122,23 +140,62 @@ const PortalView: React.FC = () => {
                   <p className="text-xs text-red-100 mb-3 leading-relaxed">
                     সকালের শীর্ষ সংবাদ ও বিশেষ সম্পাদকীয় বিশ্লেষণ আপনার ইনবক্সে পেতে সাবস্ক্রাইব করুন।
                   </p>
-                  <form onSubmit={(e) => { e.preventDefault(); alert('ধন্যবাদ! আপনি সফলভাবে দেশরিপোর্ট নিউজলেটারে যুক্ত হয়েছেন।'); }} className="space-y-2">
-                    <input
-                      type="email"
-                      required
-                      placeholder="আপনার ইমেইল লিখুন..."
-                      className="w-full px-3 py-2 text-xs bg-white text-gray-900 rounded-lg placeholder-gray-400 focus:outline-hidden"
-                    />
-                    <button
-                      type="submit"
-                      className="w-full py-2 bg-slate-950 hover:bg-black text-white text-xs font-bold rounded-lg transition-colors shadow-xs"
-                    >
-                      সাবস্ক্রাইব করুন (ফ্রি)
-                    </button>
-                  </form>
+                  {newsletterSubmitted ? (
+                    <div className="p-3 bg-red-800/80 border border-red-400/40 rounded-lg text-xs flex items-center gap-2 text-white">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
+                      <span>ধন্যবাদ! আপনি সফলভাবে দেশরিপোর্ট নিউজলেটারে যুক্ত হয়েছেন।</span>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleNewsletterSubmit} className="space-y-2">
+                      <input
+                        type="email"
+                        required
+                        value={newsletterEmail}
+                        onChange={e => setNewsletterEmail(e.target.value)}
+                        placeholder="আপনার ইমেইল লিখুন..."
+                        className="w-full px-3 py-2 text-xs bg-white text-gray-900 rounded-lg placeholder-gray-400 focus:outline-hidden"
+                      />
+                      <button
+                        type="submit"
+                        className="w-full py-2 bg-slate-950 hover:bg-black text-white text-xs font-bold rounded-lg transition-colors shadow-xs cursor-pointer"
+                      >
+                        সাবস্ক্রাইব করুন (ফ্রি)
+                      </button>
+                    </form>
+                  )}
                 </div>
               </div>
             </div>
+
+            {/* NEW SECTION 2: Multimedia & Video Hub (ভিডিও ও মাল্টিমিডিয়া সংবাদ) */}
+            <VideoSection />
+
+            {/* In-feed Midpage Ad */}
+            <div className="my-6">
+              <AdSlot placement="in_article" />
+            </div>
+
+            {/* 3. Main Portal Grid 2: Economy, International, Sports Category Blocks */}
+            <div className="space-y-8">
+              {secondBatchCategories.map(cat => (
+                <CategoryBlock key={cat.id} category={cat} />
+              ))}
+            </div>
+
+            {/* NEW SECTION 3: Editorial & Opinion Desk (সম্পাদকীয় ও বিশিষ্ট মতামত) */}
+            <OpinionSection />
+
+            {/* 4. Main Portal Grid 3: Entertainment, Tech, Lifestyle */}
+            {thirdBatchCategories.length > 0 && (
+              <div className="space-y-8">
+                {thirdBatchCategories.map(cat => (
+                  <CategoryBlock key={cat.id} category={cat} />
+                ))}
+              </div>
+            )}
+
+            {/* NEW SECTION 4: Photojournalism Gallery (ছবিতে বাংলাদেশ) */}
+            <PhotoStorySection />
           </div>
         )}
       </main>
@@ -156,9 +213,14 @@ const PortalView: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  const { currentView } = useNews();
+  const { currentView, isAdminAuthenticated } = useNews();
 
-  return currentView === 'admin' ? <AdminLayout /> : <PortalView />;
+  // If user requested admin, check authentication
+  if (currentView === 'admin') {
+    return isAdminAuthenticated ? <AdminLayout /> : <AdminLogin />;
+  }
+
+  return <PortalView />;
 };
 
 export default function App() {

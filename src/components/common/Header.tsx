@@ -12,7 +12,8 @@ import {
   Facebook,
   Youtube,
   Send,
-  Globe
+  Globe,
+  Lock
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -25,7 +26,8 @@ export const Header: React.FC = () => {
     navigateToCategory,
     navigateToAdmin,
     setSearchOpen,
-    activeCategorySlug
+    activeCategorySlug,
+    isAdminAuthenticated
   } = useNews();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -105,15 +107,17 @@ export const Header: React.FC = () => {
               {isDarkMode ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5" />}
             </button>
 
-            {/* Quick Link to Admin CMS */}
-            <button
-              onClick={() => navigateToAdmin()}
-              className="flex items-center gap-1.5 px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-medium text-xs shadow-xs transition-colors"
-              title="অ্যাডমিন সিএমএস প্যানেল"
-            >
-              <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>Admin CMS</span>
-            </button>
+            {/* Quick Link to Admin CMS only if authenticated */}
+            {isAdminAuthenticated ? (
+              <button
+                onClick={() => navigateToAdmin()}
+                className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded font-medium text-xs shadow-xs transition-colors cursor-pointer border border-slate-700"
+                title="Admin Dashboard"
+              >
+                <LayoutDashboard className="w-3.5 h-3.5 text-red-500" />
+                <span>Admin CMS</span>
+              </button>
+            ) : null}
           </div>
         </div>
       </div>
@@ -304,12 +308,12 @@ export const Header: React.FC = () => {
                   navigateToAdmin();
                   setMobileMenuOpen(false);
                 }}
-                className="w-full flex items-center justify-center gap-2 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium shadow-xs"
+                className="w-full flex items-center justify-center gap-2 py-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-md text-xs font-medium transition-colors"
               >
-                <LayoutDashboard className="w-4 h-4" />
-                <span>Admin CMS প্যানেল</span>
+                <Lock className="w-3.5 h-3.5" />
+                <span>{isAdminAuthenticated ? 'Admin CMS Panel' : 'স্টাফ লগইন (Staff Login)'}</span>
               </button>
-              <div className="mt-3 text-center text-xs text-gray-500">
+              <div className="mt-2 text-center text-[11px] text-gray-400">
                 {todayDateBn}
               </div>
             </div>

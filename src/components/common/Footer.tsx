@@ -8,7 +8,8 @@ import {
   Mail,
   CheckCircle,
   Phone,
-  MapPin
+  MapPin,
+  Lock
 } from 'lucide-react';
 
 export const Footer: React.FC = () => {
@@ -17,7 +18,9 @@ export const Footer: React.FC = () => {
     categories,
     navigateToCategory,
     navigateToPage,
-    navigateToHome
+    navigateToHome,
+    navigateToAdmin,
+    isAdminAuthenticated
   } = useNews();
 
   const [newsletterEmail, setNewsletterEmail] = useState('');
@@ -233,10 +236,19 @@ export const Footer: React.FC = () => {
         {/* Bottom Copyright */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-400 gap-3">
           <p>{siteSettings.copyrightBn}</p>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <span>সম্পাদক: তানভীর আহমেদ</span>
             <span>•</span>
             <span>নিবন্ধন নং: DR-BD-2026</span>
+            <span>•</span>
+            <button
+              onClick={() => navigateToAdmin()}
+              className="inline-flex items-center gap-1.5 text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+              title="Editorial Staff Login"
+            >
+              <Lock className="w-3 h-3 text-red-500" />
+              <span>{isAdminAuthenticated ? 'Admin CMS' : 'স্টাফ লগইন'}</span>
+            </button>
           </div>
         </div>
       </div>

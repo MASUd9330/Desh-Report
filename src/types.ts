@@ -132,6 +132,9 @@ export interface AutomationSource {
   lastFetchedAt?: string;
   articlesImported: number;
   keywordFilters?: string[];
+  region?: 'national' | 'international';
+  description?: string;
+  logo?: string;
 }
 
 export interface DuplicateDetectionRule {

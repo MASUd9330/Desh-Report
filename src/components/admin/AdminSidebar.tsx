@@ -22,7 +22,8 @@ import {
   PlusCircle,
   Clock,
   CheckCircle2,
-  FileEdit
+  FileEdit,
+  LogOut
 } from 'lucide-react';
 
 export const AdminSidebar: React.FC = () => {
@@ -31,6 +32,7 @@ export const AdminSidebar: React.FC = () => {
     adminSubSection,
     setAdminSection,
     navigateToHome,
+    logoutAdmin,
     articles = [],
     breakingNews = [],
     advertisements = [],
@@ -501,20 +503,30 @@ export const AdminSidebar: React.FC = () => {
       </div>
 
       {/* User Footer Profile */}
-      <div className="p-3 border-t border-slate-800 bg-slate-950/60 flex items-center gap-3">
-        <img
-          src={currentUser.avatar}
-          alt={currentUser.name}
-          className="w-9 h-9 rounded-xl object-cover border border-slate-700/80 shrink-0"
-        />
-        <div className="min-w-0 flex-1">
-          <span className="text-xs font-bold text-white truncate block">
-            {currentUser.name}
-          </span>
-          <span className="text-[10px] text-indigo-400 truncate block">
-            {currentUser.title || currentUser.role}
-          </span>
+      <div className="p-3 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <img
+            src={currentUser.avatar}
+            alt={currentUser.name}
+            className="w-8 h-8 rounded-xl object-cover border border-slate-700/80 shrink-0"
+          />
+          <div className="min-w-0 flex-1">
+            <span className="text-xs font-bold text-white truncate block">
+              {currentUser.name}
+            </span>
+            <span className="text-[10px] text-indigo-400 truncate block">
+              {currentUser.title || currentUser.role}
+            </span>
+          </div>
         </div>
+
+        <button
+          onClick={logoutAdmin}
+          className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-800/80 rounded-lg transition-colors cursor-pointer"
+          title="Sign Out of Newsroom CMS"
+        >
+          <LogOut className="w-4 h-4" />
+        </button>
       </div>
     </aside>
   );
