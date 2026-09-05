@@ -182,6 +182,10 @@ export interface SiteSettings {
   customHeaderCode?: string;
   customFooterCode?: string;
   newsletterEnabled: boolean;
+  readerRevenueManagerEnabled?: boolean;
+  readerRevenuePublicationId?: string;
+  readerRevenuePromptType?: 'contributions' | 'subscriptions' | 'newsletter';
+  readerRevenueCustomSnippet?: string;
 }
 
 export interface PageItem {

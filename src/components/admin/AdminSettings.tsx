@@ -12,7 +12,12 @@ import {
   ExternalLink,
   Copy,
   FileCode,
-  Globe
+  Globe,
+  Heart,
+  ShieldCheck,
+  CheckCircle2,
+  DollarSign,
+  Sparkles
 } from 'lucide-react';
 
 export const AdminSettings: React.FC = () => {
@@ -27,6 +32,20 @@ export const AdminSettings: React.FC = () => {
   const [googleAnalyticsId, setGoogleAnalyticsId] = useState(siteSettings?.googleAnalyticsId || '');
   const [googleSearchConsoleCode, setGoogleSearchConsoleCode] = useState(
     siteSettings?.googleSearchConsoleMeta || siteSettings?.googleSearchConsoleCode || ''
+  );
+
+  // Google Reader Revenue Manager State
+  const [readerRevenueManagerEnabled, setReaderRevenueManagerEnabled] = useState(
+    siteSettings?.readerRevenueManagerEnabled !== undefined ? siteSettings.readerRevenueManagerEnabled : true
+  );
+  const [readerRevenuePublicationId, setReaderRevenuePublicationId] = useState(
+    siteSettings?.readerRevenuePublicationId || ''
+  );
+  const [readerRevenuePromptType, setReaderRevenuePromptType] = useState<'contributions' | 'subscriptions' | 'newsletter'>(
+    siteSettings?.readerRevenuePromptType || 'contributions'
+  );
+  const [readerRevenueCustomSnippet, setReaderRevenueCustomSnippet] = useState(
+    siteSettings?.readerRevenueCustomSnippet || ''
   );
 
   const [saved, setSaved] = useState(false);
@@ -115,7 +134,11 @@ ${institutionalPages}
       contactAddress,
       googleAnalyticsId,
       googleSearchConsoleCode,
-      googleSearchConsoleMeta: googleSearchConsoleCode
+      googleSearchConsoleMeta: googleSearchConsoleCode,
+      readerRevenueManagerEnabled,
+      readerRevenuePublicationId,
+      readerRevenuePromptType,
+      readerRevenueCustomSnippet
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
@@ -290,6 +313,139 @@ ${institutionalPages}
                 className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg font-mono focus:outline-hidden"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Google Reader Revenue Manager (Google Publisher Center) Monetization Card */}
+        <div className="bg-white dark:bg-slate-900 border-2 border-emerald-500/40 dark:border-emerald-500/30 rounded-xl p-6 shadow-sm space-y-5 relative overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 dark:border-slate-800 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-xs">
+                <Heart className="w-5 h-5 fill-white" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-bold text-sm text-gray-900 dark:text-white">
+                    Google Reader Revenue Manager (গুগল রিডার রেভিনিউ ম্যানেজার)
+                  </h3>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-2xs">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    <span>গুগল কর্তৃক অনুমোদিত (Approved)</span>
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-500 mt-0.5">
+                  <span className="font-semibold text-emerald-700 dark:text-emerald-400">desh-report.vercel.app</span> ডোমেইনের জন্য গুগল পাবলিশার সেন্টার থেকে অফিশিয়ালি অনুমোদিত
+                </p>
+              </div>
+            </div>
+
+            <a
+              href="https://publishercenter.google.com"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-xs transition-colors shrink-0"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Publisher Center খুলুন</span>
+            </a>
+          </div>
+
+          {/* Toggle Enablement */}
+          <div className="flex items-center justify-between p-3.5 bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-xs">
+            <div>
+              <span className="font-bold text-gray-900 dark:text-white block">
+                Reader Revenue Manager ফিচার সক্রিয় রাখুন
+              </span>
+              <span className="text-[11px] text-gray-600 dark:text-gray-400">
+                পাঠকদের থেকে অনুদান (Contributions), সদস্যপদ (Subscriptions) ও নিউজলেটার সাইন-আপ প্রম্পট চালু রাখুন।
+              </span>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={readerRevenueManagerEnabled}
+                onChange={e => setReaderRevenueManagerEnabled(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-hidden rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+            </label>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            {/* Prompt Type */}
+            <div>
+              <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                প্রধান মনিটাইজেশন মডেল (Primary Prompt Type)
+              </label>
+              <select
+                value={readerRevenuePromptType}
+                onChange={e => setReaderRevenuePromptType(e.target.value as any)}
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-xs font-semibold focus:outline-hidden"
+              >
+                <option value="contributions">Contributions (অনুদানের প্রম্পট - সবচেয়ে জনপ্রিয়)</option>
+                <option value="subscriptions">Subscriptions (মাসিক/বার্ষিক পেইড সাবস্ক্রিপশন)</option>
+                <option value="newsletter">Newsletter (গুগল ১-ক্লিক নিউজলেটার সাইন-আপ)</option>
+              </select>
+              <p className="text-[11px] text-gray-500 mt-1">
+                অনুদানের মাধ্যমে পাঠকরা কোনো বাধা ছাড়াই সব খবর পড়তে পারেন এবং স্বেচ্ছায় আর্থিক সহায়তা প্রদান করতে পারেন।
+              </p>
+            </div>
+
+            {/* Publication ID */}
+            <div>
+              <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                Publication ID / Product ID (গুগল পাবলিকেশন আইডি)
+              </label>
+              <input
+                type="text"
+                value={readerRevenuePublicationId}
+                onChange={e => setReaderRevenuePublicationId(e.target.value)}
+                placeholder="যেমন: CAow... অথবা পাবলিকেশন আইডি"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg font-mono text-xs focus:outline-hidden focus:border-emerald-500"
+              />
+              <p className="text-[11px] text-gray-500 mt-1">
+                Google Publisher Center-এর Reader Revenue Manager মেনুতে এই আইডি পাওয়া যায়।
+              </p>
+            </div>
+          </div>
+
+          {/* Full Custom Snippet / Code block */}
+          <div className="text-xs">
+            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-1">
+              Google Publisher Center কোড স্নিপেট (Code Snippet - ঐচ্ছিক)
+            </label>
+            <textarea
+              rows={3}
+              value={readerRevenueCustomSnippet}
+              onChange={e => setReaderRevenueCustomSnippet(e.target.value)}
+              placeholder="গুগল পাবলিশার সেন্টার থেকে প্রাপ্ত সম্পূর্ণ <script>...</script> কোডটি এখানে পেস্ট করতে পারেন (যদি আলাদা আইডি না দিয়ে সম্পূর্ণ স্ক্রিপ্ট কপি করেন)"
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg font-mono text-xs focus:outline-hidden focus:border-emerald-500"
+            />
+          </div>
+
+          {/* Next Steps Guide */}
+          <div className="p-4 bg-gray-50 dark:bg-slate-800/60 rounded-xl border border-gray-200 dark:border-slate-700/70 text-xs space-y-2">
+            <div className="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-emerald-600" />
+              <span>অনুমোদন পাওয়ার পর আপনার পরবর্তী করণীয় ধাপসমূহ (Next Action Steps):</span>
+            </div>
+            <ol className="list-decimal pl-4 space-y-1.5 text-gray-600 dark:text-gray-300 text-[11px] leading-relaxed">
+              <li>
+                <strong>Google Publisher Center</strong> (<a href="https://publishercenter.google.com" target="_blank" rel="noreferrer" className="text-emerald-600 font-bold underline">publishercenter.google.com</a>)-এ যান এবং <strong>Desh Report</strong> নির্বাচন করুন।
+              </li>
+              <li>
+                বাম পাশের মেনু থেকে <strong>Reader Revenue Manager</strong>-এ ক্লিক করুন।
+              </li>
+              <li>
+                <strong>Pricing & Contributions:</strong> পাঠকদের জন্য সহায়তার পরিমাণ নির্ধারণ করুন (যেমন: ৳৫০, ৳১০০, ৳৫০০ ইত্যাদি)।
+              </li>
+              <li>
+                <strong>Payment Profile / Payouts:</strong> আপনার গুগল পেমেন্ট প্রোফাইল ও ব্যাংক অ্যাকাউন্ট যুক্ত করুন, যাতে আয়ের টাকা সরাসরি আপনার একাউন্টে জমা হয়।
+              </li>
+              <li>
+                <strong>Snippet / Publication ID:</strong> পাবলিশার সেন্টার থেকে দেওয়া আইডি বা কোডটি কপি করে উপরের বক্সে বসিয়ে <strong>"Save System Settings"</strong> বাটনে ক্লিক করুন।
+              </li>
+            </ol>
           </div>
         </div>
 

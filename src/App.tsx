@@ -19,6 +19,7 @@ import { OpinionSection } from './components/portal/OpinionSection';
 import { PhotoStorySection } from './components/portal/PhotoStorySection';
 import { Mail, Clock, SunMedium, CloudSun, CheckCircle2, TrendingUp } from 'lucide-react';
 import { SEOHelper } from './components/common/SEOHelper';
+import { ReaderRevenueManager } from './components/common/ReaderRevenueManager';
 
 const PortalView: React.FC = () => {
   const {
@@ -219,6 +220,7 @@ const AppContent: React.FC = () => {
   return (
     <>
       <SEOHelper />
+      <ReaderRevenueManager />
       {currentView === 'admin' ? (
         isAdminAuthenticated ? <AdminLayout /> : <AdminLogin />
       ) : (

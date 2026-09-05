@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNews } from '../../context/NewsContext';
 import { formatBengaliDate, toBengaliNumber, formatRelativeBanglaTime } from '../../utils/helpers';
 import { AdSlot } from '../ads/AdSlot';
+import { RelatedNewsSection } from './RelatedNewsSection';
 import {
   Facebook,
   Send,
@@ -15,7 +16,8 @@ import {
   Eye,
   Bookmark,
   ExternalLink,
-  MessageCircle
+  MessageCircle,
+  Heart
 } from 'lucide-react';
 
 export const ArticleView: React.FC = () => {
@@ -50,11 +52,6 @@ export const ArticleView: React.FC = () => {
   }
 
   const category = categories.find(c => c.id === article.categoryId);
-
-  // Related articles in same category
-  const relatedArticles = articles
-    .filter(a => a.categoryId === article.categoryId && a.id !== article.id && a.status === 'published')
-    .slice(0, 4);
 
   // Most read sidebar
   const mostRead = [...articles]
@@ -303,43 +300,41 @@ export const ArticleView: React.FC = () => {
             </div>
           )}
 
+          {/* Google Reader Revenue Manager Support Callout */}
+          <div className="my-7 p-5 bg-gradient-to-r from-red-50 via-rose-50 to-orange-50 dark:from-slate-900 dark:via-red-950/20 dark:to-slate-900 border border-red-200 dark:border-red-900/50 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <Heart className="w-5 h-5 fill-white" />
+              </div>
+              <div>
+                <h4 className="font-bold text-sm text-gray-900 dark:text-white font-serif-bn">
+                  দেশরিপোর্টের বস্তুনিষ্ঠ সাংবাদিকতায় আপনিও অংশীদার হোন
+                </h4>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5 leading-relaxed">
+                  গুগল অনুমোদিত স্বাধীন ও নিরপেক্ষ সংবাদ পরিবেশনায় আপনার সামান্যতম অনুদান আমাদের সত্য প্রকাশে অনুপ্রেরণা দেয়।
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => window.triggerReaderRevenueContribution?.()}
+              className="w-full sm:w-auto px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg shadow-xs flex items-center justify-center gap-1.5 shrink-0 cursor-pointer transition-colors"
+            >
+              <Heart className="w-3.5 h-3.5 fill-white" />
+              <span>সহায়তা করুন</span>
+            </button>
+          </div>
+
           {/* After Article Ad */}
           <AdSlot placement="after_article" className="my-8" />
 
-          {/* Related Stories */}
-          {relatedArticles.length > 0 && (
-            <div className="mt-10 pt-6 border-t-2 border-gray-200 dark:border-slate-800">
-              <h3 className="text-xl font-bold font-serif-bn text-gray-950 dark:text-white mb-4">
-                সম্পর্কিত সংবাদ
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {relatedArticles.map((rel) => (
-                  <div
-                    key={rel.id}
-                    onClick={() => navigateToArticle(rel.id)}
-                    className="cursor-pointer group flex items-start gap-3 p-3 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-lg hover:shadow-md transition-all"
-                  >
-                    <div className="w-20 h-16 rounded overflow-hidden shrink-0 bg-gray-100 dark:bg-slate-800">
-                      <img
-                        src={rel.featuredImage}
-                        alt={rel.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-xs sm:text-sm font-bold font-serif-bn text-gray-900 dark:text-white group-hover:text-red-600 line-clamp-2 leading-snug">
-                        {rel.title}
-                      </h4>
-                      <span className="text-[11px] text-gray-400 mt-1 block">
-                        {formatRelativeBanglaTime(rel.publishedAt)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Tag-based Related News Section (3-4 relevant posts) */}
+          <RelatedNewsSection
+            currentArticle={article}
+            articles={articles}
+            categories={categories}
+            onSelectArticle={navigateToArticle}
+          />
         </div>
 
         {/* Right Sidebar (4 Cols) */}

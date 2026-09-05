@@ -716,7 +716,11 @@ export const initialSiteSettings: SiteSettings = {
   timezone: 'Asia/Dhaka (GMT+6)',
   defaultLanguage: 'bn',
   theme: 'light',
-  newsletterEnabled: true
+  newsletterEnabled: true,
+  readerRevenueManagerEnabled: true,
+  readerRevenuePublicationId: '',
+  readerRevenuePromptType: 'contributions',
+  readerRevenueCustomSnippet: ''
 };
 
 export const initialPages: PageItem[] = [

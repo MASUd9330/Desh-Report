@@ -13,7 +13,8 @@ import {
   Youtube,
   Send,
   Globe,
-  Lock
+  Lock,
+  Heart
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -97,6 +98,16 @@ export const Header: React.FC = () => {
                 <Send className="w-3.5 h-3.5" />
               </a>
             </div>
+
+            {/* Reader Revenue Contribution Button */}
+            <button
+              onClick={() => window.triggerReaderRevenueContribution?.()}
+              className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 text-[11px] font-bold border border-red-200 dark:border-red-900/70 transition-all cursor-pointer shadow-2xs"
+              title="দেশরিপোর্টের সাংবাদিকতায় সহায়তা করুন"
+            >
+              <Heart className="w-3 h-3 fill-red-600 text-red-600 dark:fill-red-400 dark:text-red-400" />
+              <span>সহায়তা করুন</span>
+            </button>
 
             {/* Dark / Light Mode Toggle */}
             <button
