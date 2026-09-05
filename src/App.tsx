@@ -18,6 +18,7 @@ import { VideoSection } from './components/portal/VideoSection';
 import { OpinionSection } from './components/portal/OpinionSection';
 import { PhotoStorySection } from './components/portal/PhotoStorySection';
 import { Mail, Clock, SunMedium, CloudSun, CheckCircle2, TrendingUp } from 'lucide-react';
+import { SEOHelper } from './components/common/SEOHelper';
 
 const PortalView: React.FC = () => {
   const {
@@ -215,12 +216,16 @@ const PortalView: React.FC = () => {
 const AppContent: React.FC = () => {
   const { currentView, isAdminAuthenticated } = useNews();
 
-  // If user requested admin, check authentication
-  if (currentView === 'admin') {
-    return isAdminAuthenticated ? <AdminLayout /> : <AdminLogin />;
-  }
-
-  return <PortalView />;
+  return (
+    <>
+      <SEOHelper />
+      {currentView === 'admin' ? (
+        isAdminAuthenticated ? <AdminLayout /> : <AdminLogin />
+      ) : (
+        <PortalView />
+      )}
+    </>
+  );
 };
 
 export default function App() {

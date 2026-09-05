@@ -28,6 +28,7 @@ import {
 import { trustedFeedPresets } from '../data/trustedFeeds';
 import { calculateSimilarity, generateSlug, calculateReadingTime } from '../utils/helpers';
 import { autoPublishArticle } from '../services/socialPublisher';
+import { notifySearchEnginesOfNewArticle } from '../services/indexingService';
 
 interface NewsContextType {
   // Navigation & State
@@ -79,6 +80,10 @@ interface NewsContextType {
   recordArticleView: (id: string) => void;
 
   // Breaking News Actions
+  breakingAutoTriggerEnabled: boolean;
+  lastBreakingAutoTriggerAt: string;
+  toggleBreakingAutoTrigger: () => void;
+  triggerBreakingAutoRefresh: () => void;
   addBreakingNews: (item: Partial<BreakingNewsItem>) => void;
   updateBreakingNews: (id: string, updates: Partial<BreakingNewsItem>) => void;
   deleteBreakingNews: (id: string) => void;
@@ -603,6 +608,9 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         autoPublishArticle(newArticle);
       } catch (_) {}
+      try {
+        notifySearchEnginesOfNewArticle(newArticle);
+      } catch (_) {}
     }
 
     return newArticle;
@@ -676,7 +684,62 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
-  // Breaking News
+  // Breaking News State & 15-Minute Auto-Trigger
+  const [breakingAutoTriggerEnabled, setBreakingAutoTriggerEnabled] = useState<boolean>(() =>
+    loadLocal('breaking_auto_trigger_enabled', true)
+  );
+  const [lastBreakingAutoTriggerAt, setLastBreakingAutoTriggerAt] = useState<string>(() =>
+    loadLocal('last_breaking_auto_trigger_at', 'এখনই সক্রিয়')
+  );
+
+  const toggleBreakingAutoTrigger = () => {
+    setBreakingAutoTriggerEnabled(prev => {
+      const next = !prev;
+      localStorage.setItem('deshreport_breaking_auto_trigger_enabled', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const triggerBreakingAutoRefresh = () => {
+    setArticles(currentArticles => {
+      const eligibleArticles = currentArticles
+        .filter(a => a.status === 'published')
+        .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+
+      const topBreakingArticles = eligibleArticles
+        .filter(a => a.isBreaking || a.isTrending || a.isFeaturedHero)
+        .slice(0, 5);
+
+      const backupArticles = eligibleArticles.slice(0, 4);
+      const chosenArticles = topBreakingArticles.length > 0 ? topBreakingArticles : backupArticles;
+
+      if (chosenArticles.length > 0) {
+        const generatedItems: BreakingNewsItem[] = chosenArticles.map((art, idx) => ({
+          id: 'auto-brk-' + art.id,
+          title: art.title,
+          link: `/article/${art.slug}`,
+          articleId: art.id,
+          priority: idx === 0 || art.isBreaking ? 'urgent' : 'high',
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          displayLocations: ['homepage', 'category', 'article']
+        }));
+
+        setBreakingNews(prev => {
+          const manualItems = prev.filter(p => !p.id.startsWith('auto-brk-'));
+          return [...manualItems, ...generatedItems];
+        });
+      }
+      return currentArticles;
+    });
+
+    const timeStr = new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' });
+    setLastBreakingAutoTriggerAt(timeStr);
+    localStorage.setItem('deshreport_last_breaking_auto_trigger_at', JSON.stringify(timeStr));
+    addActivityLog('ব্রেকিং অটো-ট্রিগার (১৫ মিনিট)', 'breaking', 'ব্রেকিং নিউজ স্বয়ংক্রিয়ভাবে রিফ্রেশ করা হয়েছে');
+  };
+
+  // Breaking News Actions
   const addBreakingNews = (item: Partial<BreakingNewsItem>) => {
     const newItem: BreakingNewsItem = {
       id: 'brk-' + Date.now(),
@@ -976,11 +1039,14 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (newlyCreatedArticles.length > 0) {
       setArticles(prev => [...newlyCreatedArticles, ...prev]);
 
-      // If auto-published, push to Telegram, Facebook, Pinterest, LinkedIn & WhatsApp
+      // If auto-published, push to Telegram, Facebook, Pinterest, LinkedIn & WhatsApp and ping search engines
       if (src.autoPublish) {
         newlyCreatedArticles.forEach(art => {
           try {
             autoPublishArticle(art);
+          } catch (_) {}
+          try {
+            notifySearchEnginesOfNewArticle(art);
           } catch (_) {}
         });
       }
@@ -999,19 +1065,25 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { imported, duplicates };
   };
 
-  // 15-Minute Background Auto-Syndication & RSS Sync
+  // 15-Minute Background Auto-Syndication, RSS Sync & Breaking News Auto-Trigger
   useEffect(() => {
     const timer = setInterval(() => {
+      // 1. Auto-Fetch Active Automation Feeds
       const activeSources = automationSources.filter(s => s.status === 'active' && s.autoPublish);
       if (activeSources.length > 0) {
         activeSources.forEach(s => {
           runAutomationFeed(s.id);
         });
       }
+
+      // 2. 15-Minute Breaking News Trigger Auto-Refresh
+      if (breakingAutoTriggerEnabled) {
+        triggerBreakingAutoRefresh();
+      }
     }, 15 * 60 * 1000); // Every 15 minutes
 
     return () => clearInterval(timer);
-  }, [automationSources]);
+  }, [automationSources, breakingAutoTriggerEnabled]);
 
   // Site Settings & Pages
   const updateSiteSettings = (settings: Partial<SiteSettings>) => {
@@ -1126,6 +1198,10 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         deleteArticle,
         changeArticleStatus,
         recordArticleView,
+        breakingAutoTriggerEnabled,
+        lastBreakingAutoTriggerAt,
+        toggleBreakingAutoTrigger,
+        triggerBreakingAutoRefresh,
         addBreakingNews,
         updateBreakingNews,
         deleteBreakingNews,
