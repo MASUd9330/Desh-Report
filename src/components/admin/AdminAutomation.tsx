@@ -19,7 +19,12 @@ import {
   Search,
   Sparkles,
   Check,
-  Copy
+  Copy,
+  Send,
+  Play,
+  Pause,
+  Zap,
+  Timer
 } from 'lucide-react';
 
 export const AdminAutomation: React.FC = () => {
@@ -31,8 +36,33 @@ export const AdminAutomation: React.FC = () => {
     addAutomationSource,
     deleteAutomationSource,
     runAutomationFeed,
-    categories = []
+    categories = [],
+    articles = [],
+    autoRssSyncEnabled,
+    autoPostDraftsEnabled,
+    rssSyncIntervalMinutes,
+    autoPostIntervalMinutes,
+    autoPostBatchSize,
+    lastRssSyncAt,
+    lastAutoPostAt,
+    nextRssSyncSeconds,
+    nextAutoPostSeconds,
+    toggleAutoRssSync,
+    toggleAutoPostDrafts,
+    triggerRssSyncNow,
+    triggerAutoPostDraftsNow,
+    setAutoPostBatchSize,
+    setAutoPostIntervalMinutes,
+    setRssSyncIntervalMinutes
   } = useNews();
+
+  const draftArticles = articles.filter(a => a.status === 'draft');
+
+  const formatCountdown = (totalSeconds: number) => {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   // Safe fallback for automation settings
   const safeSettings = automationSettings || {
@@ -237,6 +267,188 @@ export const AdminAutomation: React.FC = () => {
             <RefreshCw className={`w-4 h-4 ${isRunning ? 'animate-spin' : ''}`} />
             <span>{isRunning ? 'ফিড সিঙ্ক হচ্ছে...' : 'সকল ফিড সিঙ্ক করুন'}</span>
           </button>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 10-MIN RSS SYNC & 15-MIN AUTO-POST DUAL ENGINE CONTROLLERS */}
+      {/* ========================================================================= */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Card 1: 10-Minute RSS Auto-Sync Engine */}
+        <div className="bg-linear-to-br from-cyan-500/10 via-sky-500/5 to-transparent dark:from-cyan-950/40 dark:via-sky-950/20 dark:to-slate-900 border border-cyan-200 dark:border-cyan-800/60 rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-4">
+          <div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-cyan-600 text-white rounded-xl shadow-xs">
+                  <Rss className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                    <span>১০ মিনিট RSS অটো-সিংক ইঞ্জিন</span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
+                      {autoRssSyncEnabled ? 'স্বয়ংক্রিয় সক্রিয়' : 'পজ করা'}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    প্রতি ১০ মিনিট পর পর বিশ্বস্ত সোর্স থেকে নতুন নিউজ ফেচ করে পোর্টালে যুক্ত করে
+                  </p>
+                </div>
+              </div>
+
+              {/* Toggle Switch */}
+              <button
+                onClick={toggleAutoRssSync}
+                className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                  autoRssSyncEnabled
+                    ? 'bg-cyan-600 text-white border-cyan-500 shadow-xs'
+                    : 'bg-gray-100 dark:bg-slate-800 text-gray-400 border-gray-300 dark:border-slate-700'
+                }`}
+                title={autoRssSyncEnabled ? 'অটো-সিংক পজ করুন' : 'অটো-সিংক সক্রিয় করুন'}
+              >
+                {autoRssSyncEnabled ? <Play className="w-4 h-4 fill-white" /> : <Pause className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {/* Countdown and Stats Box */}
+            <div className="grid grid-cols-2 gap-3 mt-4 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xs p-3 rounded-xl border border-cyan-100 dark:border-cyan-900/40">
+              <div>
+                <span className="text-[11px] text-gray-500 dark:text-gray-400 block">পরবর্তী সিংক কাউন্টডাউন:</span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <Timer className="w-4 h-4 text-cyan-600 shrink-0" />
+                  <span className="font-mono text-base font-extrabold text-cyan-700 dark:text-cyan-300 tracking-wider">
+                    {formatCountdown(nextRssSyncSeconds)}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[11px] text-gray-500 dark:text-gray-400 block">সর্বশেষ সিংক হয়েছে:</span>
+                <span className="text-xs font-semibold text-gray-800 dark:text-gray-200 mt-1 block truncate">
+                  {lastRssSyncAt}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions & Settings */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-cyan-100 dark:border-cyan-900/40 text-xs">
+            <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
+              <span>সিংক সাইকেল:</span>
+              <select
+                value={rssSyncIntervalMinutes}
+                onChange={e => setRssSyncIntervalMinutes(Number(e.target.value))}
+                className="bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-md px-2 py-1 text-xs font-bold text-cyan-700 dark:text-cyan-300 focus:outline-hidden"
+              >
+                <option value={5}>৫ মিনিট পর পর</option>
+                <option value={10}>১০ মিনিট পর পর (স্ট্যান্ডার্ড)</option>
+                <option value={15}>১৫ মিনিট পর পর</option>
+                <option value={30}>৩০ মিনিট পর পর</option>
+              </select>
+            </div>
+
+            <button
+              onClick={() => triggerRssSyncNow()}
+              className="flex items-center gap-1 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-bold shadow-xs cursor-pointer transition-colors text-xs"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>এখনই সিংক চালান</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Card 2: 15-Minute Draft Auto-Post Engine */}
+        <div className="bg-linear-to-br from-emerald-500/10 via-teal-500/5 to-transparent dark:from-emerald-950/40 dark:via-teal-950/20 dark:to-slate-900 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-4">
+          <div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-emerald-600 text-white rounded-xl shadow-xs">
+                  <Zap className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                    <span>১৫ মিনিট অটো-পোস্ট ইঞ্জিন</span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      {autoPostDraftsEnabled ? 'স্বয়ংক্রিয় সক্রিয়' : 'পজ করা'}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    ড্রাফট কিউ থেকে প্রতি ১৫ মিনিটে নির্দিষ্ট সংখ্যক সংবাদ স্বয়ংক্রিয়ভাবে প্রকাশ করে
+                  </p>
+                </div>
+              </div>
+
+              {/* Toggle Switch */}
+              <button
+                onClick={toggleAutoPostDrafts}
+                className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                  autoPostDraftsEnabled
+                    ? 'bg-emerald-600 text-white border-emerald-500 shadow-xs'
+                    : 'bg-gray-100 dark:bg-slate-800 text-gray-400 border-gray-300 dark:border-slate-700'
+                }`}
+                title={autoPostDraftsEnabled ? 'অটো-পোস্ট পজ করুন' : 'অটো-পোস্ট সক্রিয় করুন'}
+              >
+                {autoPostDraftsEnabled ? <Play className="w-4 h-4 fill-white" /> : <Pause className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {/* Countdown and Stats Box */}
+            <div className="grid grid-cols-2 gap-3 mt-4 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xs p-3 rounded-xl border border-emerald-100 dark:border-emerald-900/40">
+              <div>
+                <span className="text-[11px] text-gray-500 dark:text-gray-400 block">পরবর্তী পোস্ট কাউন্টডাউন:</span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <Timer className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="font-mono text-base font-extrabold text-emerald-700 dark:text-emerald-300 tracking-wider">
+                    {formatCountdown(nextAutoPostSeconds)}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[11px] text-gray-500 dark:text-gray-400 block">কিউতে ড্রাফট বাকি:</span>
+                <span className="text-xs font-extrabold text-amber-600 dark:text-amber-400 mt-1 block">
+                  {draftArticles.length}টি সংবাদ কিউতে প্রস্তুত
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions & Settings */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-emerald-100 dark:border-emerald-900/40 text-xs">
+            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+              <span>পোস্ট সাইকেল:</span>
+              <select
+                value={autoPostIntervalMinutes}
+                onChange={e => setAutoPostIntervalMinutes(Number(e.target.value))}
+                className="bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-md px-2 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 focus:outline-hidden"
+              >
+                <option value={10}>১০ মিনিট পর পর</option>
+                <option value={15}>১৫ মিনিট পর পর (স্ট্যান্ডার্ড)</option>
+                <option value={20}>২০ মিনিট পর পর</option>
+                <option value={30}>৩০ মিনিট পর পর</option>
+              </select>
+
+              <select
+                value={autoPostBatchSize}
+                onChange={e => setAutoPostBatchSize(Number(e.target.value))}
+                className="bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-md px-2 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 focus:outline-hidden"
+              >
+                <option value={1}>১টি করে পোস্ট</option>
+                <option value={2}>২টি করে পোস্ট</option>
+                <option value={5}>৫টি করে পোস্ট</option>
+              </select>
+            </div>
+
+            <button
+              onClick={() => triggerAutoPostDraftsNow()}
+              disabled={draftArticles.length === 0}
+              className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg font-bold shadow-xs cursor-pointer transition-colors text-xs"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>পরবর্তী ড্রাফট এখনই পোস্ট করুন</span>
+            </button>
+          </div>
         </div>
       </div>
 

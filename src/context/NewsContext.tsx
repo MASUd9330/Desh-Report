@@ -103,7 +103,23 @@ interface NewsContextType {
   addMediaItem: (item: Partial<MediaItem>) => void;
   deleteMediaItem: (id: string) => void;
 
-  // Automation Actions
+  // Automation & RSS Actions
+  autoRssSyncEnabled: boolean;
+  autoPostDraftsEnabled: boolean;
+  rssSyncIntervalMinutes: number;
+  autoPostIntervalMinutes: number;
+  autoPostBatchSize: number;
+  lastRssSyncAt: string;
+  lastAutoPostAt: string;
+  nextRssSyncSeconds: number;
+  nextAutoPostSeconds: number;
+  toggleAutoRssSync: () => void;
+  toggleAutoPostDrafts: () => void;
+  triggerRssSyncNow: () => Promise<void>;
+  triggerAutoPostDraftsNow: (countOverride?: number) => number;
+  setAutoPostBatchSize: (size: number) => void;
+  setAutoPostIntervalMinutes: (minutes: number) => void;
+  setRssSyncIntervalMinutes: (minutes: number) => void;
   addAutomationSource: (src: Partial<AutomationSource>) => void;
   updateAutomationSource: (id: string, updates: Partial<AutomationSource>) => void;
   deleteAutomationSource: (id: string) => void;
@@ -201,6 +217,34 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       autoAssignCategory: true
     };
   });
+
+  // 10-Minute RSS Auto-Sync & 15-Minute Draft Auto-Post Engine State
+  const [autoRssSyncEnabled, setAutoRssSyncEnabled] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('deshreport_auto_rss_sync');
+      return saved !== null ? saved === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const [autoPostDraftsEnabled, setAutoPostDraftsEnabled] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('deshreport_auto_post_drafts');
+      return saved !== null ? saved === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const [rssSyncIntervalMinutes, setRssSyncIntervalMinutes] = useState<number>(10); // 10 Minutes
+  const [autoPostIntervalMinutes, setAutoPostIntervalMinutes] = useState<number>(15); // 15 Minutes
+  const [autoPostBatchSize, setAutoPostBatchSize] = useState<number>(1); // 1 draft per 15 min cycle
+
+  const [lastRssSyncAt, setLastRssSyncAt] = useState<string>('সক্রিয় (Active)');
+  const [lastAutoPostAt, setLastAutoPostAt] = useState<string>('সক্রিয় (Active)');
+  const [nextRssSyncSeconds, setNextRssSyncSeconds] = useState<number>(10 * 60);
+  const [nextAutoPostSeconds, setNextAutoPostSeconds] = useState<number>(15 * 60);
 
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([
     {
@@ -1065,25 +1109,133 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { imported, duplicates };
   };
 
-  // 15-Minute Background Auto-Syndication, RSS Sync & Breaking News Auto-Trigger
+  // Trigger 10-Min RSS Feed Sync across all active feeds
+  const triggerRssSyncNow = async () => {
+    const activeSources = automationSources.filter(s => s.status === 'active');
+    const sourcesToRun = activeSources.length > 0 ? activeSources : automationSources.slice(0, 3);
+    
+    let totalImported = 0;
+    for (const src of sourcesToRun) {
+      try {
+        const res = await runAutomationFeed(src.id);
+        totalImported += (res.imported || 0);
+      } catch (err) {
+        console.error('Auto RSS sync error for source:', src.name, err);
+      }
+    }
+    
+    const timeStr = new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    setLastRssSyncAt(timeStr);
+    setNextRssSyncSeconds(rssSyncIntervalMinutes * 60);
+    addActivityLog('RSS অটো-সিংক সম্পন্ন', 'automation', `১০ মিনিট চক্র: ${sourcesToRun.length}টি ফিড স্ক্যান, ${totalImported}টি নতুন সংবাদ যুক্ত`);
+  };
+
+  // Trigger 15-Min Auto-Post of Draft Articles
+  const triggerAutoPostDraftsNow = (countOverride?: number): number => {
+    const drafts = articles.filter(a => a.status === 'draft');
+    if (drafts.length === 0) return 0;
+
+    const countToPublish = countOverride || autoPostBatchSize || 1;
+    // Take the oldest drafts first (FIFO queue)
+    const sortedDrafts = [...drafts].reverse();
+    const toPublish = sortedDrafts.slice(0, countToPublish);
+    const publishIds = new Set(toPublish.map(p => p.id));
+
+    setArticles(prev =>
+      prev.map(art => {
+        if (publishIds.has(art.id)) {
+          const publishedArt = {
+            ...art,
+            status: 'published' as const,
+            publishedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          // Broadcast to Social Media & Search Engines
+          try {
+            autoPublishArticle(publishedArt);
+          } catch (_) {}
+          try {
+            notifySearchEnginesOfNewArticle(publishedArt);
+          } catch (_) {}
+          return publishedArt;
+        }
+        return art;
+      })
+    );
+
+    const timeStr = new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    setLastAutoPostAt(timeStr);
+    setNextAutoPostSeconds(autoPostIntervalMinutes * 60);
+
+    toPublish.forEach(p => {
+      addActivityLog('অটো-পোস্ট সফল', 'article', `১৫ মিনিট শিডিউল: "${p.title.slice(0, 30)}..." প্রকাশিত হয়েছে`);
+    });
+
+    return toPublish.length;
+  };
+
+  const toggleAutoRssSync = () => {
+    setAutoRssSyncEnabled(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('deshreport_auto_rss_sync', String(next));
+      } catch (_) {}
+      return next;
+    });
+  };
+
+  const toggleAutoPostDrafts = () => {
+    setAutoPostDraftsEnabled(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('deshreport_auto_post_drafts', String(next));
+      } catch (_) {}
+      return next;
+    });
+  };
+
+  // Precision 1-Second Background Countdown & Auto-Execution Timer
   useEffect(() => {
     const timer = setInterval(() => {
-      // 1. Auto-Fetch Active Automation Feeds
-      const activeSources = automationSources.filter(s => s.status === 'active' && s.autoPublish);
-      if (activeSources.length > 0) {
-        activeSources.forEach(s => {
-          runAutomationFeed(s.id);
-        });
-      }
+      // 1. RSS 10-Minute Auto-Sync
+      setNextRssSyncSeconds(prev => {
+        if (prev <= 1) {
+          if (autoRssSyncEnabled) {
+            triggerRssSyncNow();
+          }
+          return rssSyncIntervalMinutes * 60;
+        }
+        return prev - 1;
+      });
 
-      // 2. 15-Minute Breaking News Trigger Auto-Refresh
-      if (breakingAutoTriggerEnabled) {
+      // 2. Drafts 15-Minute Auto-Post
+      setNextAutoPostSeconds(prev => {
+        if (prev <= 1) {
+          if (autoPostDraftsEnabled) {
+            triggerAutoPostDraftsNow();
+          }
+          return autoPostIntervalMinutes * 60;
+        }
+        return prev - 1;
+      });
+
+      // 3. Breaking News 15-Minute Auto-Refresh
+      if (breakingAutoTriggerEnabled && Math.random() < 0.001) {
         triggerBreakingAutoRefresh();
       }
-    }, 15 * 60 * 1000); // Every 15 minutes
+    }, 1000);
 
     return () => clearInterval(timer);
-  }, [automationSources, breakingAutoTriggerEnabled]);
+  }, [
+    autoRssSyncEnabled,
+    autoPostDraftsEnabled,
+    rssSyncIntervalMinutes,
+    autoPostIntervalMinutes,
+    autoPostBatchSize,
+    automationSources,
+    articles,
+    breakingAutoTriggerEnabled
+  ]);
 
   // Site Settings & Pages
   const updateSiteSettings = (settings: Partial<SiteSettings>) => {
@@ -1214,6 +1366,22 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         deleteCategory,
         addMediaItem,
         deleteMediaItem,
+        autoRssSyncEnabled,
+        autoPostDraftsEnabled,
+        rssSyncIntervalMinutes,
+        autoPostIntervalMinutes,
+        autoPostBatchSize,
+        lastRssSyncAt,
+        lastAutoPostAt,
+        nextRssSyncSeconds,
+        nextAutoPostSeconds,
+        toggleAutoRssSync,
+        toggleAutoPostDrafts,
+        triggerRssSyncNow,
+        triggerAutoPostDraftsNow,
+        setAutoPostBatchSize,
+        setAutoPostIntervalMinutes,
+        setRssSyncIntervalMinutes,
         addAutomationSource,
         updateAutomationSource,
         deleteAutomationSource,

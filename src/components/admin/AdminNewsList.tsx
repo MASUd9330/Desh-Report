@@ -13,7 +13,11 @@ import {
   Flame,
   Star,
   Check,
-  X
+  X,
+  Send,
+  Sparkles,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 
 export const AdminNewsList: React.FC = () => {
@@ -23,13 +27,27 @@ export const AdminNewsList: React.FC = () => {
     deleteArticle,
     changeArticleStatus,
     setAdminSection,
-    navigateToArticle
+    navigateToArticle,
+    autoPostDraftsEnabled,
+    nextAutoPostSeconds,
+    toggleAutoPostDrafts,
+    triggerAutoPostDraftsNow,
+    autoPostIntervalMinutes,
+    autoPostBatchSize
   } = useNews();
 
   const [filterStatus, setFilterStatus] = useState<NewsStatus | 'all'>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [batchNotice, setBatchNotice] = useState<string | null>(null);
+
+  const formatCountdown = (totalSeconds: number) => {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const filteredArticles = useMemo(() => {
     return articles.filter(art => {
@@ -42,6 +60,10 @@ export const AdminNewsList: React.FC = () => {
       return matchStatus && matchCat && matchSearch;
     });
   }, [articles, filterStatus, filterCategory, searchQuery]);
+
+  const draftArticles = useMemo(() => {
+    return articles.filter(a => a.status === 'draft');
+  }, [articles]);
 
   const getCategoryName = (catId: string) => {
     const cat = categories.find(c => c.id === catId);
@@ -65,6 +87,43 @@ export const AdminNewsList: React.FC = () => {
     setConfirmDeleteId(null);
   };
 
+  // Publish all drafts at once
+  const handlePublishAllDrafts = () => {
+    if (draftArticles.length === 0) return;
+    const count = draftArticles.length;
+    draftArticles.forEach(draft => {
+      changeArticleStatus(draft.id, 'published');
+    });
+    setBatchNotice(`সফল! ${count}টি ড্রাফট সংবাদ একসাথে সাইটে প্রকাশিত (Published) করা হয়েছে!`);
+    setTimeout(() => setBatchNotice(null), 4000);
+  };
+
+  // Publish selected
+  const handlePublishSelected = () => {
+    if (selectedIds.length === 0) return;
+    selectedIds.forEach(id => {
+      changeArticleStatus(id, 'published');
+    });
+    const count = selectedIds.length;
+    setSelectedIds([]);
+    setBatchNotice(`সফল! নির্বাচিত ${count}টি সংবাদ প্রকাশিত করা হয়েছে!`);
+    setTimeout(() => setBatchNotice(null), 4000);
+  };
+
+  const handleToggleSelectAll = () => {
+    if (selectedIds.length === filteredArticles.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredArticles.map(a => a.id));
+    }
+  };
+
+  const handleToggleSelectOne = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
   return (
     <div className="space-y-5">
       {/* Header & New Article Button */}
@@ -86,6 +145,74 @@ export const AdminNewsList: React.FC = () => {
           <span>+ Write New Article</span>
         </button>
       </div>
+
+      {/* Batch Notification Alert */}
+      {batchNotice && (
+        <div className="p-3 bg-emerald-100 dark:bg-emerald-950 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs rounded-xl flex items-center gap-2 animate-fade-in shadow-xs">
+          <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span className="font-semibold">{batchNotice}</span>
+        </div>
+      )}
+
+      {/* Quick Drafts Banner with 15-Minute Auto-Post Engine */}
+      {draftArticles.length > 0 && (
+        <div className="bg-linear-to-r from-amber-50 via-orange-50 to-emerald-50 dark:from-slate-900 dark:via-amber-950/30 dark:to-emerald-950/20 border border-amber-200 dark:border-amber-900/50 rounded-xl p-4 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 bg-amber-500 text-white rounded-xl shrink-0 shadow-xs">
+              <FileEdit className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-bold text-sm text-gray-900 dark:text-white">
+                  আপনার {draftArticles.length}টি সংবাদ বর্তমানে ড্রাফট (Draft) কিউতে রয়েছে
+                </h3>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  {autoPostDraftsEnabled ? `১৫ মিনিট অটো-পোস্ট সক্রিয় (পরবর্তী: ${formatCountdown(nextAutoPostSeconds)})` : 'অটো-পোস্ট পজ করা'}
+                </span>
+              </div>
+              <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+                প্রতি {autoPostIntervalMinutes} মিনিট পর পর স্বয়ংক্রিয়ভাবে ড্রাফট থেকে {autoPostBatchSize}টি করে সংবাদ পোস্ট হচ্ছে। আপনি চাইলে এখনই সবগুলো বা নির্দিষ্ট কয়েকটি পোস্ট করতে পারেন।
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {selectedIds.length > 0 && (
+              <button
+                onClick={handlePublishSelected}
+                className="flex items-center gap-1.5 px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>নির্বাচিত {selectedIds.length}টি প্রকাশ করুন</span>
+              </button>
+            )}
+
+            <button
+              onClick={() => {
+                const count = triggerAutoPostDraftsNow();
+                if (count > 0) {
+                  setBatchNotice(`সফল! পরবর্তী ড্রাফট সংবাদটি সাইটে প্রকাশিত করা হয়েছে!`);
+                  setTimeout(() => setBatchNotice(null), 4000);
+                }
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer whitespace-nowrap"
+              title="কিউ থেকে পরবর্তী ১টি সংবাদ এখনই প্রকাশ করুন"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>পরবর্তী ড্রাফট পোস্ট করুন</span>
+            </button>
+
+            <button
+              onClick={handlePublishAllDrafts}
+              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer whitespace-nowrap"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>এক ক্লিকে সব {draftArticles.length}টি প্রকাশ করুন</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Filter and Search Bar */}
       <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-4 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
@@ -169,7 +296,20 @@ export const AdminNewsList: React.FC = () => {
           <table className="w-full text-left text-xs">
             <thead className="bg-gray-50 dark:bg-slate-950 text-gray-500 border-b border-gray-200 dark:border-slate-800 uppercase font-semibold">
               <tr>
-                <th className="py-3 px-4">Article Details</th>
+                <th className="py-3 px-3 w-10 text-center">
+                  <button
+                    onClick={handleToggleSelectAll}
+                    className="cursor-pointer text-gray-400 hover:text-gray-700 dark:hover:text-white"
+                    title="Select all"
+                  >
+                    {selectedIds.length > 0 && selectedIds.length === filteredArticles.length ? (
+                      <CheckSquare className="w-4 h-4 text-indigo-600" />
+                    ) : (
+                      <Square className="w-4 h-4" />
+                    )}
+                  </button>
+                </th>
+                <th className="py-3 px-3">Article Details</th>
                 <th className="py-3 px-3">Category</th>
                 <th className="py-3 px-3">Author</th>
                 <th className="py-3 px-3">Views</th>
@@ -181,7 +321,7 @@ export const AdminNewsList: React.FC = () => {
             <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
               {filteredArticles.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-gray-400">
+                  <td colSpan={8} className="py-12 text-center text-gray-400">
                     No articles found matching your criteria.
                   </td>
                 </tr>
@@ -189,10 +329,26 @@ export const AdminNewsList: React.FC = () => {
                 filteredArticles.map(art => (
                   <tr
                     key={art.id}
-                    className="hover:bg-gray-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                    className={`hover:bg-gray-50/80 dark:hover:bg-slate-800/40 transition-colors ${
+                      selectedIds.includes(art.id) ? 'bg-indigo-50/40 dark:bg-indigo-950/20' : ''
+                    }`}
                   >
+                    {/* Checkbox */}
+                    <td className="py-3 px-3 text-center">
+                      <button
+                        onClick={() => handleToggleSelectOne(art.id)}
+                        className="cursor-pointer text-gray-400 hover:text-indigo-600"
+                      >
+                        {selectedIds.includes(art.id) ? (
+                          <CheckSquare className="w-4 h-4 text-indigo-600" />
+                        ) : (
+                          <Square className="w-4 h-4" />
+                        )}
+                      </button>
+                    </td>
+
                     {/* Article Details with Thumbnail */}
-                    <td className="py-3 px-4 max-w-sm">
+                    <td className="py-3 px-3 max-w-sm">
                       <div className="flex items-center gap-3">
                         <img
                           src={art.featuredImage}
