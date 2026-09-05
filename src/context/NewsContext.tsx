@@ -27,6 +27,7 @@ import {
 } from '../data/initialData';
 import { trustedFeedPresets } from '../data/trustedFeeds';
 import { calculateSimilarity, generateSlug, calculateReadingTime } from '../utils/helpers';
+import { autoPublishArticle } from '../services/socialPublisher';
 
 interface NewsContextType {
   // Navigation & State
@@ -596,6 +597,14 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ]);
     }
     addActivityLog('সংবাদ প্রকাশ', 'article', newArticle.title);
+
+    // Auto-Publish to Telegram, Facebook, Pinterest, LinkedIn & WhatsApp if published
+    if (newArticle.status === 'published') {
+      try {
+        autoPublishArticle(newArticle);
+      } catch (_) {}
+    }
+
     return newArticle;
   };
 
@@ -839,12 +848,55 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // RSS / News API Fetch simulation with REAL duplicate detection algorithm
+  // Real RSS / Feed Fetch with intelligent online parsing + preset fallback & social auto-dispatch
   const runAutomationFeed = async (sourceId: string): Promise<{ imported: number; duplicates: number }> => {
     const src = automationSources.find(s => s.id === sourceId);
     if (!src) return { imported: 0, duplicates: 0 };
 
-    // Find preset matching this source to provide authentic, agency-specific news
+    let fetchedOnlineArticles: Array<{
+      title: string;
+      summary: string;
+      content: string;
+      sourceUrl: string;
+      image: string;
+      cat: string;
+    }> = [];
+
+    // Attempt live RSS fetch over internet if it's an RSS URL
+    if (src.url && src.url.startsWith('http')) {
+      try {
+        const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(src.url)}`;
+        const res = await fetch(proxyUrl);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === 'ok' && Array.isArray(data.items) && data.items.length > 0) {
+            fetchedOnlineArticles = data.items.slice(0, 5).map((item: any) => {
+              // Extract image from enclosure or thumbnail or description HTML
+              let img = item.enclosure?.link || item.thumbnail || '';
+              if (!img && item.description && item.description.includes('<img')) {
+                const match = item.description.match(/src=["'](.*?)["']/);
+                if (match) img = match[1];
+              }
+              const cleanSummary = (item.description || item.content || '')
+                .replace(/<[^>]*>?/gm, '')
+                .trim()
+                .slice(0, 260);
+
+              return {
+                title: item.title ? item.title.trim() : `${src.name} সর্বশেষ সংবাদ`,
+                summary: cleanSummary ? cleanSummary + '...' : `${src.name} থেকে সংগৃহীত সংবাদ।`,
+                content: (item.content || item.description || cleanSummary).replace(/<[^>]*>?/gm, '').trim(),
+                sourceUrl: item.link || `${src.url}#item-${Date.now()}`,
+                image: img && img.startsWith('http') ? img : 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1000&auto=format&fit=crop&q=80',
+                cat: src.categoryId
+              };
+            });
+          }
+        }
+      } catch (_) {}
+    }
+
+    // Find preset matching this source if online fetch returned empty
     const matchedPreset = trustedFeedPresets.find(p =>
       (p.url && src.url && p.url.trim().toLowerCase() === src.url.trim().toLowerCase()) ||
       p.name.toLowerCase() === src.name.toLowerCase() ||
@@ -853,7 +905,9 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (src.id && p.id && src.id.toLowerCase().includes(p.id.replace('preset-', '')))
     );
 
-    const incomingSamples = matchedPreset && matchedPreset.sampleArticles.length > 0
+    const incomingSamples = fetchedOnlineArticles.length > 0
+      ? fetchedOnlineArticles
+      : matchedPreset && matchedPreset.sampleArticles.length > 0
       ? matchedPreset.sampleArticles
       : [
           {
@@ -868,6 +922,7 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     let imported = 0;
     let duplicates = 0;
+    const newlyCreatedArticles: Article[] = [];
 
     for (const item of incomingSamples) {
       let isDuplicate = false;
@@ -894,7 +949,7 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         const status: NewsStatus = src.autoPublish ? 'published' : 'draft';
         const newArt: Article = {
-          id: 'art-auto-' + Date.now() + '-' + imported,
+          id: 'art-auto-' + Date.now() + '-' + imported + '-' + Math.random().toString(36).substring(2, 5),
           title: item.title,
           slug: generateSlug(item.title) + '-' + Math.floor(Math.random() * 1000),
           summary: item.summary,
@@ -913,8 +968,21 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
           shareCount: 0,
           status
         };
-        setArticles(prev => [newArt, ...prev]);
+        newlyCreatedArticles.push(newArt);
         imported++;
+      }
+    }
+
+    if (newlyCreatedArticles.length > 0) {
+      setArticles(prev => [...newlyCreatedArticles, ...prev]);
+
+      // If auto-published, push to Telegram, Facebook, Pinterest, LinkedIn & WhatsApp
+      if (src.autoPublish) {
+        newlyCreatedArticles.forEach(art => {
+          try {
+            autoPublishArticle(art);
+          } catch (_) {}
+        });
       }
     }
 
@@ -930,6 +998,20 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addActivityLog('অটোমেশন ফিড চালানো হয়েছে', 'automation', `${src.name}: ${imported}টি সংগৃহীত, ${duplicates}টি ডুপ্লিকেট বাদ`);
     return { imported, duplicates };
   };
+
+  // 15-Minute Background Auto-Syndication & RSS Sync
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const activeSources = automationSources.filter(s => s.status === 'active' && s.autoPublish);
+      if (activeSources.length > 0) {
+        activeSources.forEach(s => {
+          runAutomationFeed(s.id);
+        });
+      }
+    }, 15 * 60 * 1000); // Every 15 minutes
+
+    return () => clearInterval(timer);
+  }, [automationSources]);
 
   // Site Settings & Pages
   const updateSiteSettings = (settings: Partial<SiteSettings>) => {
