@@ -34,6 +34,7 @@ export const AdminAutomation: React.FC = () => {
     automationSettings,
     updateAutomationSettings,
     addAutomationSource,
+    updateAutomationSource,
     deleteAutomationSource,
     runAutomationFeed,
     categories = [],
@@ -51,6 +52,7 @@ export const AdminAutomation: React.FC = () => {
     toggleAutoPostDrafts,
     triggerRssSyncNow,
     triggerAutoPostDraftsNow,
+    publishAllDraftsNow,
     setAutoPostBatchSize,
     setAutoPostIntervalMinutes,
     setRssSyncIntervalMinutes
@@ -90,13 +92,13 @@ export const AdminAutomation: React.FC = () => {
   const [directorySearchQuery, setDirectorySearchQuery] = useState('');
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
-  // New custom source form state
+  // New custom source form state - defaults to direct live auto-publish
   const [showAddSource, setShowAddSource] = useState(false);
   const [sourceName, setSourceName] = useState('');
   const [sourceUrl, setSourceUrl] = useState('');
   const [sourceRegion, setSourceRegion] = useState<'national' | 'international'>('national');
   const [targetCategory, setTargetCategory] = useState(categories[0]?.id || 'national');
-  const [autoPublish, setAutoPublish] = useState(false);
+  const [autoPublish, setAutoPublish] = useState(true);
 
   // Ingestion status state
   const [isRunning, setIsRunning] = useState(false);
@@ -125,7 +127,7 @@ export const AdminAutomation: React.FC = () => {
       region: preset.region,
       description: preset.description,
       status: 'active',
-      autoPublish: false,
+      autoPublish: true,
       fetchIntervalMinutes: preset.fetchIntervalMinutes,
       articlesImported: 0,
       keywordFilters: preset.tags
@@ -440,14 +442,27 @@ export const AdminAutomation: React.FC = () => {
               </select>
             </div>
 
-            <button
-              onClick={() => triggerAutoPostDraftsNow()}
-              disabled={draftArticles.length === 0}
-              className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg font-bold shadow-xs cursor-pointer transition-colors text-xs"
-            >
-              <Send className="w-3.5 h-3.5" />
-              <span>পরবর্তী ড্রাফট এখনই পোস্ট করুন</span>
-            </button>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                onClick={() => triggerAutoPostDraftsNow()}
+                disabled={draftArticles.length === 0}
+                className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg font-bold shadow-xs cursor-pointer transition-colors text-xs"
+                title="শিডিউল অনুযায়ী পরবর্তী ড্রাফট পোস্ট করুন"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>পরবর্তী ড্রাফট এখনই পোস্ট</span>
+              </button>
+              {draftArticles.length > 0 && (
+                <button
+                  onClick={() => publishAllDraftsNow()}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg font-bold shadow-xs cursor-pointer transition-colors text-xs"
+                  title="সাইটে কোনো ড্রাফট না রেখে সব সংবাদ সরাসরি এক ক্লিকে লাইভ করুন"
+                >
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>সকল ড্রাফট সরাসরি লাইভ করুন ({draftArticles.length}টি)</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -574,7 +589,19 @@ export const AdminAutomation: React.FC = () => {
             </div>
 
             {/* Quick Add Custom or Browse */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => {
+                  automationSources.forEach(s => {
+                    updateAutomationSource(s.id, { autoPublish: true });
+                  });
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold cursor-pointer transition-colors shadow-xs"
+                title="সকল আরএসএস ফিডকে ড্রাফট ছাড়া সরাসরি লাইভ পোস্ট মোডে সেট করুন"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>সকল ফিডে সরাসরি লাইভ নিশ্চিত করুন</span>
+              </button>
               <button
                 onClick={() => setActiveTab('directory')}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
@@ -781,17 +808,21 @@ export const AdminAutomation: React.FC = () => {
                             </span>
                           </td>
 
-                          {/* Status */}
+                          {/* Status & AutoPublish Toggle */}
                           <td className="py-3 px-3">
-                            <span
-                              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            <button
+                              type="button"
+                              onClick={() => updateAutomationSource(s.id, { autoPublish: !s.autoPublish })}
+                              className={`px-2.5 py-1 rounded-md text-[10px] font-bold cursor-pointer transition-colors inline-flex items-center gap-1.5 shadow-2xs ${
                                 s.autoPublish
-                                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
-                                  : 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+                                  ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800'
+                                  : 'bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-800'
                               }`}
+                              title="ক্লিক করে সরাসরি লাইভ অথবা ড্রাফট মোড পরিবর্তন করুন"
                             >
-                              {s.autoPublish ? 'সরাসরি লাইভ' : 'ড্রাফট (পর্যালোচনা)'}
-                            </span>
+                              <span className={`w-1.5 h-1.5 rounded-full ${s.autoPublish ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+                              <span>{s.autoPublish ? '🟢 সরাসরি লাইভ' : '🟡 ড্রাফট মোড'}</span>
+                            </button>
                           </td>
 
                           {/* Last Synced */}

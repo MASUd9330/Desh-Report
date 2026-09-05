@@ -78,13 +78,34 @@ export const calculateReadingTime = (text: string): number => {
   return Math.max(1, Math.ceil(words / wordsPerMinute));
 };
 
-// Levenshtein similarity algorithm for Automated Duplicate Detection
+// Enhanced similarity algorithm for Automated Duplicate Detection (Levenshtein + Token Overlap)
 export const calculateSimilarity = (str1: string, str2: string): number => {
-  const s1 = str1.trim().toLowerCase();
-  const s2 = str2.trim().toLowerCase();
+  const clean = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/[।,\-—:;?!‘'""`()[\]{}।/\\#%*~_]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const s1 = clean(str1);
+  const s2 = clean(str2);
   if (s1 === s2) return 1.0;
   if (!s1.length || !s2.length) return 0.0;
 
+  // Word token overlap (Jaccard similarity) for rapid match
+  const words1 = new Set(s1.split(' ').filter(w => w.length > 1));
+  const words2 = new Set(s2.split(' ').filter(w => w.length > 1));
+  if (words1.size > 0 && words2.size > 0) {
+    let intersection = 0;
+    for (const w of words1) {
+      if (words2.has(w)) intersection++;
+    }
+    const union = new Set([...words1, ...words2]).size;
+    const jaccard = intersection / union;
+    if (jaccard >= 0.75) return Math.max(jaccard, 0.85);
+  }
+
+  // Levenshtein distance algorithm
   const track = Array(s2.length + 1)
     .fill(null)
     .map(() => Array(s1.length + 1).fill(null));

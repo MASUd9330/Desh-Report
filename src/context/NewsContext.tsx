@@ -117,6 +117,7 @@ interface NewsContextType {
   toggleAutoPostDrafts: () => void;
   triggerRssSyncNow: () => Promise<void>;
   triggerAutoPostDraftsNow: (countOverride?: number) => number;
+  publishAllDraftsNow: () => number;
   setAutoPostBatchSize: (size: number) => void;
   setAutoPostIntervalMinutes: (minutes: number) => void;
   setRssSyncIntervalMinutes: (minutes: number) => void;
@@ -161,7 +162,46 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return localStorage.getItem('deshreport_theme') === 'dark';
   });
 
-  const [articles, setArticles] = useState<Article[]>(() => loadLocal('articles', initialArticles));
+  const [articles, setArticles] = useState<Article[]>(() => {
+    const loaded = loadLocal<Article[]>('articles', initialArticles);
+    const list = loaded && loaded.length > 0 ? loaded : initialArticles;
+
+    // Deduplicate any repeated titles or duplicate IDs
+    const seenTitles = new Set<string>();
+    const seenIds = new Set<string>();
+    const cleanArticles: Article[] = [];
+
+    for (const art of list) {
+      if (!art || !art.id) continue;
+      const normalizedTitle = (art.title || '').trim().toLowerCase().replace(/\s+/g, ' ');
+      if (seenIds.has(art.id) || seenTitles.has(normalizedTitle)) continue;
+
+      seenIds.add(art.id);
+      seenTitles.add(normalizedTitle);
+
+      // Directly publish any drafts so new site has all news live immediately as requested
+      if (art.status === 'draft') {
+        cleanArticles.push({
+          ...art,
+          status: 'published'
+        });
+      } else {
+        cleanArticles.push(art);
+      }
+    }
+
+    // Ensure all unique articles from initialArticles exist
+    for (const art of initialArticles) {
+      const normalizedTitle = (art.title || '').trim().toLowerCase().replace(/\s+/g, ' ');
+      if (!seenIds.has(art.id) && !seenTitles.has(normalizedTitle)) {
+        seenIds.add(art.id);
+        seenTitles.add(normalizedTitle);
+        cleanArticles.push(art);
+      }
+    }
+
+    return cleanArticles;
+  });
   const [categories, setCategories] = useState<Category[]>(() => loadLocal('categories', initialCategories));
   const [breakingNews, setBreakingNews] = useState<BreakingNewsItem[]>(() => {
     const loaded = loadLocal<BreakingNewsItem[]>('breaking', initialBreakingNews);
@@ -174,7 +214,32 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const [advertisements, setAdvertisements] = useState<Advertisement[]>(() => loadLocal('ads', initialAds));
   const [mediaLibrary, setMediaLibrary] = useState<MediaItem[]>(() => loadLocal('media', initialMedia));
-  const [automationSources, setAutomationSources] = useState<AutomationSource[]>(() => loadLocal('automation', initialAutomationSources));
+  const [automationSources, setAutomationSources] = useState<AutomationSource[]>(() => {
+    const loaded = loadLocal<AutomationSource[]>('automation', initialAutomationSources);
+    const sourceMap = new Map<string, AutomationSource>();
+    // Guarantee 6 active RSS feeds with autoPublish: true
+    initialAutomationSources.forEach(s => {
+      sourceMap.set(s.id, { ...s, autoPublish: true, status: 'active' });
+    });
+
+    if (loaded && loaded.length > 0) {
+      loaded.forEach(s => {
+        const existing = sourceMap.get(s.id);
+        if (existing) {
+          sourceMap.set(s.id, {
+            ...existing,
+            ...s,
+            autoPublish: true,
+            status: 'active'
+          });
+        } else if (sourceMap.size < 6) {
+          sourceMap.set(s.id, { ...s, autoPublish: true, status: 'active' });
+        }
+      });
+    }
+
+    return Array.from(sourceMap.values()).slice(0, 6);
+  });
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => {
     const loaded = loadLocal<SiteSettings>('settings', initialSiteSettings);
     return {
@@ -1034,19 +1099,44 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     for (const item of incomingSamples) {
       let isDuplicate = false;
 
-      // 1. Check Source URL duplicate
-      if (duplicateRule.checkSourceUrl) {
-        const urlMatch = articles.some(a => a.sourceUrl && a.sourceUrl === item.sourceUrl);
+      // 1. Check Source URL duplicate against articles and newlyCreatedArticles
+      if (duplicateRule.checkSourceUrl && item.sourceUrl) {
+        const urlMatch =
+          articles.some(a => a.sourceUrl && a.sourceUrl === item.sourceUrl) ||
+          newlyCreatedArticles.some(a => a.sourceUrl && a.sourceUrl === item.sourceUrl);
         if (urlMatch) isDuplicate = true;
       }
 
-      // 2. Check Headline similarity with Levenshtein algorithm
-      if (!isDuplicate && duplicateRule.checkHeadlineSimilarity) {
+      // 2. Check exact / normalized title duplicate against articles and newlyCreatedArticles
+      if (!isDuplicate && item.title) {
+        const cleanTitle = item.title.trim().toLowerCase().replace(/\s+/g, ' ');
+        const exactMatch =
+          articles.some(a => a.title.trim().toLowerCase().replace(/\s+/g, ' ') === cleanTitle) ||
+          newlyCreatedArticles.some(a => a.title.trim().toLowerCase().replace(/\s+/g, ' ') === cleanTitle);
+        if (exactMatch) isDuplicate = true;
+      }
+
+      // 3. Check Headline similarity with normalized Levenshtein + token overlap
+      // Normalize threshold if stored as percentage (e.g., 75 -> 0.75)
+      const threshold = duplicateRule.similarityThreshold > 1
+        ? duplicateRule.similarityThreshold / 100
+        : duplicateRule.similarityThreshold;
+
+      if (!isDuplicate && duplicateRule.checkHeadlineSimilarity && item.title) {
         for (const existing of articles) {
           const sim = calculateSimilarity(item.title, existing.title);
-          if (sim >= duplicateRule.similarityThreshold) {
+          if (sim >= threshold) {
             isDuplicate = true;
             break;
+          }
+        }
+        if (!isDuplicate) {
+          for (const created of newlyCreatedArticles) {
+            const sim = calculateSimilarity(item.title, created.title);
+            if (sim >= threshold) {
+              isDuplicate = true;
+              break;
+            }
           }
         }
       }
@@ -1054,7 +1144,9 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (isDuplicate) {
         duplicates++;
       } else {
-        const status: NewsStatus = src.autoPublish ? 'published' : 'draft';
+        // Direct auto-publish as requested: site is new, publish directly to live site
+        const shouldDirectPublish = src.autoPublish !== false;
+        const status: NewsStatus = shouldDirectPublish ? 'published' : 'draft';
         const newArt: Article = {
           id: 'art-auto-' + Date.now() + '-' + imported + '-' + Math.random().toString(36).substring(2, 5),
           title: item.title,
@@ -1063,15 +1155,15 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
           content: item.content,
           featuredImage: item.image,
           categoryId: item.cat || src.categoryId,
-          authorId: 'usr-4',
-          authorName: `অটোমেশন বট (${src.name})`,
+          authorId: 'usr-admin-masud',
+          authorName: `দেশরিপোর্ট ডেস্ক (${src.name})`,
           tags: ['সংবাদ', 'অটোমেশন', src.region === 'international' ? 'আন্তর্জাতিক' : 'জাতীয়'],
           source: src.name,
           sourceUrl: item.sourceUrl,
           publishedAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          readingTimeMinutes: 2,
-          viewCount: 1,
+          readingTimeMinutes: calculateReadingTime(item.content || item.summary || ''),
+          viewCount: Math.floor(Math.random() * 40) + 15,
           shareCount: 0,
           status
         };
@@ -1084,7 +1176,7 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setArticles(prev => [...newlyCreatedArticles, ...prev]);
 
       // If auto-published, push to Telegram, Facebook, Pinterest, LinkedIn & WhatsApp and ping search engines
-      if (src.autoPublish) {
+      if (src.autoPublish !== false) {
         newlyCreatedArticles.forEach(art => {
           try {
             autoPublishArticle(art);
@@ -1112,7 +1204,7 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Trigger 10-Min RSS Feed Sync across all active feeds
   const triggerRssSyncNow = async () => {
     const activeSources = automationSources.filter(s => s.status === 'active');
-    const sourcesToRun = activeSources.length > 0 ? activeSources : automationSources.slice(0, 3);
+    const sourcesToRun = activeSources.length > 0 ? activeSources : automationSources.slice(0, 6);
     
     let totalImported = 0;
     for (const src of sourcesToRun) {
@@ -1172,6 +1264,13 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return toPublish.length;
+  };
+
+  // Publish All Drafts Immediately with 1-click
+  const publishAllDraftsNow = (): number => {
+    const drafts = articles.filter(a => a.status === 'draft');
+    if (drafts.length === 0) return 0;
+    return triggerAutoPostDraftsNow(drafts.length);
   };
 
   const toggleAutoRssSync = () => {
@@ -1379,6 +1478,7 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toggleAutoPostDrafts,
         triggerRssSyncNow,
         triggerAutoPostDraftsNow,
+        publishAllDraftsNow,
         setAutoPostBatchSize,
         setAutoPostIntervalMinutes,
         setRssSyncIntervalMinutes,

@@ -369,6 +369,107 @@ export const initialArticles: Article[] = [
     viewCount: 6520,
     shareCount: 310,
     status: 'published'
+  },
+  {
+    id: 'art-9',
+    title: 'ইউরোপের বাজারে দেশীয় তৈরি পোশাক ও পরিবেশবান্ধব ডেনিমের নতুন রপ্তানি রেকর্ড',
+    slug: 'bangladesh-rmg-eco-denim-export-record-europe',
+    subtitle: 'গ্রিন ফ্যাক্টরি সার্টিফিকেশনে শীর্ষে বাংলাদেশ, আন্তর্জাতিক বায়ারদের ব্যাপক আগ্রহ',
+    summary: 'ইউরোপীয় ইউনিয়নে বাংলাদেশি পরিবেশবান্ধব ও রি-সাইকেল্ড ডেনিম পোশাকের চাহিদা বৃদ্ধি পেয়েছে। চলতি অর্থবছরের প্রথম সাত মাসে ইউরোপে পোশাক রপ্তানিতে ১২ শতাংশ প্রবৃদ্ধি হয়েছে বলে জানিয়েছে বিজিএমইএ।',
+    content: `বিশ্বের শীর্ষ ১০০ পরিবেশবান্ধব তৈরি পোশাক কারখানার মধ্যে অর্ধেকের বেশি বাংলাদেশে প্রতিষ্ঠিত হওয়ায় আন্তর্জাতিক বাজারে ইতিবাচক ভাবমূর্তি তৈরি হয়েছে। 
+
+বিজিএমইএ সভাপতি বলেন, "আমরা এখন সাধারণ সস্তা পোশাকের গণ্ডি পেরিয়ে হাই-ভ্যালু ফ্যাশনেবল পণ্যে ঝুঁকছি। পরিবেশবান্ধব কারখানা ও কম কার্বন ফুটপ্রিন্টের কারণে ক্রেতারা এখন দীর্ঘমেয়াদি অর্ডারে বাংলাদেশকে সর্বোচ্চ অগ্রাধিকার দিচ্ছেন।"`,
+    featuredImage: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&auto=format&fit=crop&q=80',
+    imageCaption: 'একটি আধুনিক গ্রিন ডেনিম পোশাক কারখানায় উৎপাদন পর্যবেক্ষণ',
+    imageCredit: 'দেশরিপোর্ট বাণিজ্য আলোকচিত্রী',
+    categoryId: 'economy',
+    subcategory: 'পোশাক শিল্প',
+    authorId: 'usr-4',
+    authorName: 'রাশেদ খান',
+    tags: ['অর্থনীতি', 'পোশাক শিল্প', 'রপ্তানি', 'ইউরোপ', 'বাণিজ্য'],
+    source: 'বাণিজ্য প্রতিবেদক',
+    publishedAt: new Date(Date.now() - 1000 * 60 * 480).toISOString(),
+    updatedAt: new Date().toISOString(),
+    readingTimeMinutes: 4,
+    viewCount: 11200,
+    shareCount: 780,
+    status: 'published'
+  },
+  {
+    id: 'art-10',
+    title: 'পাবলিক বিশ্ববিদ্যালয়গুলোতে মৌলিক গবেষণায় জাতীয় বাজেট অনুদান দ্বিগুণ করার ঘোষণা',
+    slug: 'public-university-fundamental-research-national-grant-boost',
+    subtitle: 'কৃষি, ন্যানোটেকনোলজি ও বায়োমেডিকেলে উদ্ভাবনী প্রকল্প প্রণয়নে অগ্রাধিকার',
+    summary: 'উচ্চশিক্ষার মান আন্তর্জাতিক মানে উন্নীত করতে এবং স্থানীয় সমস্যা সমাধানে কার্যকর বৈজ্ঞানিক আবিষ্কার বাড়াতে বিশ্ববিদ্যালয় মঞ্জুরি কমিশন (ইউজিসি) বিশেষ গবেষণা তহবিল বরাদ্দ করেছে।',
+    content: `বিশ্ববিদ্যালয় মঞ্জুরি কমিশন (ইউজিসি) জানিয়েছে, ২০২৩-২৪ অর্থবছরের সংশোধিত বাজেটে দেশের সব সরকারি বিশ্ববিদ্যালয়ের গবেষকদের জন্য তহবিল দ্বিগুণের বেশি বাড়িয়ে বিশেষ স্কলারশিপের ব্যবস্থা করা হয়েছে।
+
+শিক্ষাবিদরা এই সিদ্ধান্তকে স্বাগত জানিয়ে বলেছেন, শিল্পপ্রতিষ্ঠান ও বিশ্ববিদ্যালয়ের মধ্যে সেতুবন্ধন তৈরির মাধ্যমে গবেষণার ফলাফল দেশের সার্বিক অর্থনীতিতে সরাসরি প্রভাব রাখবে।`,
+    featuredImage: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&auto=format&fit=crop&q=80',
+    imageCaption: 'বিশ্ববিদ্যালয় রসায়ন গবেষণাগারে তরুণ বিজ্ঞানীদের প্রকল্প কাজ',
+    imageCredit: 'শিক্ষা ডেস্ক / দেশরিপোর্ট',
+    categoryId: 'national',
+    subcategory: 'উচ্চশিক্ষা',
+    authorId: 'usr-2',
+    authorName: 'ফারহানা ইসলাম',
+    tags: ['শিক্ষা', 'গবেষণা', 'বিশ্ববিদ্যালয়', 'ইউজিসি'],
+    source: 'শিক্ষা প্রতিবেদক',
+    publishedAt: new Date(Date.now() - 1000 * 60 * 540).toISOString(),
+    updatedAt: new Date().toISOString(),
+    readingTimeMinutes: 3,
+    viewCount: 7890,
+    shareCount: 520,
+    status: 'published'
+  },
+  {
+    id: 'art-11',
+    title: 'সাফ অনূর্ধ্ব-২০ নারী চ্যাম্পিয়নশিপে শক্তিশালী ভারতকে হারিয়ে ফাইনালে বাংলাদেশ',
+    slug: 'saff-u20-women-championship-bangladesh-beats-india',
+    subtitle: 'কমলাপুর স্টেডিয়ামে তীব্র প্রতিদ্বন্দ্বিতাপূর্ণ ম্যাচে ২-১ গোলের চোখধাঁধানো জয়',
+    summary: 'বীরশ্রেষ্ঠ শহীদ সিপাহী মোস্তফা কামাল স্টেডিয়ামে হাজারো দর্শকের উচ্ছ্বাসের মাঝে অসাধারণ ফুটবল নৈপুণ্য প্রদর্শন করে ফাইনালে জায়গা করে নিয়েছে বাংলাদেশের অদম্য নারী ফুটবল দল।',
+    content: `ম্যাচের শুরু থেকেই আক্রমণাত্মক ফুটবলের কৌশল বেছে নেয় বাংলাদেশ। প্রথমার্ধের ২৫ মিনিটে ডি-বক্সের বাইরে থেকে চোখধাঁধানো দূরপাল্লার শটে প্রথম গোলটি করেন শামসুন্নাহার জুনিয়র। দ্বিতীয়ার্ধে ভারত সমতায় ফিরলেও ম্যাচের অন্তিম মুহূর্তে অধিনায়ক আফঈদা খন্দকারের হেডারে ঐতিহাসিক জয় নিশ্চিত হয়।
+
+ম্যাচ শেষে কোচ বলেন, "আমাদের মেয়েরা শারীরিক ও মানসিকভাবে দৃঢ় ছিল। পুরো টুর্নামেন্টে আমরা অপরাজিত চ্যাম্পিয়ন হওয়ার লক্ষ্য নিয়েই মাঠে নামব।"`,
+    featuredImage: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&auto=format&fit=crop&q=80',
+    imageCaption: 'ম্যাচ জয়ের পর লাল-সবুজ পতাকা নিয়ে নারী দলের বিজয়োল্লাস',
+    imageCredit: 'ক্রীড়া প্রতিবেদক / দেশরিপোর্ট',
+    categoryId: 'sports',
+    subcategory: 'ফুটবল',
+    authorId: 'usr-3',
+    authorName: 'মাহমুদুল হাসান',
+    tags: ['খেলাধুলা', 'ফুটবল', 'সাফ', 'নারী ফুটবল'],
+    source: 'ক্রীড়া ডেস্ক',
+    publishedAt: new Date(Date.now() - 1000 * 60 * 600).toISOString(),
+    updatedAt: new Date().toISOString(),
+    readingTimeMinutes: 3,
+    viewCount: 15400,
+    shareCount: 2100,
+    status: 'published',
+    isTrending: true
+  },
+  {
+    id: 'art-12',
+    title: 'সাইবার হুমকি ও ব্যাংকিং ডেটা সুরক্ষায় নতুন জাতীয় সাইবার সিকিউরিটি ফ্রেমওয়ার্ক',
+    slug: 'national-cyber-security-framework-banking-data-protection',
+    subtitle: 'আর্থিক প্রতিষ্ঠানগুলোতে রিয়েল-টাইম থ্রেট ইন্টেলিজেন্স ও এআই ডিফেন্স বাধ্যতামূলক',
+    summary: 'ডিজিটাল লেনদেনের নিরাপত্তা নিশ্চিতে কেন্দ্রীয় ব্যাংক ও তথ্যপ্রযুক্তি বিভাগের যৌথ উদ্যোগে আধুনিক সাইবার মনিটরিং সেন্টার স্থাপনের রোডম্যাপ ঘোষণা করা হয়েছে।',
+    content: `অনলাইন ট্রানজেকশন এবং মোবাইল ব্যাংকিংয়ের ক্রমবর্ধমান বিস্তারের সঙ্গে সঙ্গে হ্যাকিং প্রতিরোধে উচ্চমানের এন্ড-টু-এন্ড এনক্রিপশন ও টু-ফ্যাক্টর অথেনটিকেশন কঠোরভাবে বাস্তবায়নের নির্দেশ দেওয়া হয়েছে। 
+
+সাইবার বিশেষজ্ঞরা জানান, আগামী মাস থেকে বাণিজ্যিক ব্যাংকগুলোর কোর ব্যাংকিং সিস্টেমে নিয়মিত ভালনারেবিলিটি স্ক্যান ও পেনিট্রেশন টেস্টিং করা হবে।`,
+    featuredImage: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80',
+    imageCaption: 'সাইবার থ্রেট মনিটরিং স্ক্রিনে ডেটা বিশ্লেষণ করছেন নিরাপত্তা প্রকৌশলীরা',
+    imageCredit: 'প্রযুক্তি ডেস্ক',
+    categoryId: 'technology',
+    subcategory: 'সাইবার নিরাপত্তা',
+    authorId: 'usr-3',
+    authorName: 'মাহমুদুল হাসান',
+    tags: ['প্রযুক্তি', 'সাইবার নিরাপত্তা', 'ব্যাংকিং', 'এআই'],
+    source: 'প্রযুক্তি প্রতিবেদক',
+    publishedAt: new Date(Date.now() - 1000 * 60 * 660).toISOString(),
+    updatedAt: new Date().toISOString(),
+    readingTimeMinutes: 4,
+    viewCount: 8900,
+    shareCount: 610,
+    status: 'published'
   }
 ];
 
@@ -498,131 +599,100 @@ export const initialMedia: MediaItem[] = [
 ];
 
 export const initialAutomationSources: AutomationSource[] = [
-  // 1. National: BSS News
+  // 1. National: Prothom Alo (প্রথম আলো)
   {
     id: 'src-1',
-    name: 'BSS News RSS Feed (বাংলাদেশ সংবাদ সংস্থা)',
-    type: 'rss',
-    url: 'https://www.bssnews.net/feed/rss',
-    categoryId: 'national',
-    region: 'national',
-    description: 'জাতীয় বার্তা সংস্থা - সরকারি নীতি, অর্থনীতি ও উন্নয়নমূলক প্রতিবেদন',
-    fetchIntervalMinutes: 30,
-    status: 'active',
-    autoPublish: false,
-    lastFetchedAt: '২০২৬-০৩-০৪ ১০:১৫ পূর্বাহ্ন',
-    articlesImported: 142,
-    keywordFilters: ['বাংলাদেশ', 'ঢাকা', 'উন্নয়ন', 'পররাষ্ট্র']
-  },
-  // 2. International: BBC Bangla
-  {
-    id: 'src-2',
-    name: 'BBC News Bangla (বিবিসি বাংলা আরএসএস)',
-    type: 'rss',
-    url: 'https://feeds.bbci.co.uk/bengali/rss.xml',
-    categoryId: 'international',
-    region: 'international',
-    description: 'আন্তর্জাতিক বিশ্বরাজনীতি, কূটনীতি ও বস্তুনিষ্ঠ তথ্যভিত্তিক সংবাদ',
-    fetchIntervalMinutes: 20,
-    status: 'active',
-    autoPublish: false,
-    lastFetchedAt: '২০২৬-০৩-০৪ ১১:০৫ পূর্বাহ্ন',
-    articlesImported: 215,
-    keywordFilters: ['আন্তর্জাতিক', 'কূটনীতি', 'জলবায়ু', 'জাতিসংঘ']
-  },
-  // 3. National: Prothom Alo
-  {
-    id: 'src-3',
     name: 'Prothom Alo Top Feed (প্রথম আলো)',
     type: 'rss',
     url: 'https://www.prothomalo.com/feed',
     categoryId: 'national',
     region: 'national',
-    description: 'শীর্ষ জাতীয় দৈনিক - রাজনীতি, সাম্প্রতিক ও জনগুরুত্বপূর্ণ খবর',
-    fetchIntervalMinutes: 20,
+    description: 'শীর্ষ জাতীয় দৈনিক - অনুসন্ধানী প্রতিবেদন, রাজনীতি ও সমসাময়িক জাতীয় সংবাদ',
+    fetchIntervalMinutes: 10,
     status: 'active',
-    autoPublish: false,
-    lastFetchedAt: '২০২৬-০৩-০৪ ১০:৪৫ পূর্বাহ্ন',
+    autoPublish: true,
+    lastFetchedAt: '২০২৬-০৩-০৫ ১০:৪৫ পূর্বাহ্ন',
     articlesImported: 184,
     keywordFilters: ['রাজনীতি', 'অর্থনীতি', 'শিক্ষা']
   },
-  // 4. International: Reuters
+  // 2. National: BSS News (বাংলাদেশ সংবাদ সংস্থা)
   {
-    id: 'src-4',
-    name: 'Reuters World News Wire (রয়টার্স ওয়ার্ল্ড ওয়্যার)',
-    type: 'news_api',
-    url: 'https://www.reutersagency.com/feed/?best-topics=world&post_type=best',
-    apiKey: 'ret_live_948291848201',
-    categoryId: 'international',
-    region: 'international',
-    description: 'বিশ্বখ্যাত বার্তা সংস্থা - আন্তর্জাতিক অর্থবাজার, বাণিজ্য ও গ্লোবাল ইভেন্ট',
-    fetchIntervalMinutes: 30,
+    id: 'src-2',
+    name: 'BSS News RSS Feed (বাসস জাতীয় বার্তা সংস্থা)',
+    type: 'rss',
+    url: 'https://www.bssnews.net/feed/rss',
+    categoryId: 'national',
+    region: 'national',
+    description: 'জাতীয় বার্তা সংস্থা - সরকারি নীতি, সার্কুলার, উন্নয়ন অবকাঠামো ও পরিবেশ সংবাদ',
+    fetchIntervalMinutes: 10,
     status: 'active',
-    autoPublish: false,
-    lastFetchedAt: '২০২৬-০৩-০৪ ০৯:৩০ পূর্বাহ্ন',
-    articlesImported: 126,
-    keywordFilters: ['UN', 'Diplomacy', 'Global Economy', 'Trade']
+    autoPublish: true,
+    lastFetchedAt: '২০২৬-০৩-০৫ ১০:১৫ পূর্বাহ্ন',
+    articlesImported: 142,
+    keywordFilters: ['বাংলাদেশ', 'উন্নয়ন', 'প্রশাসন']
   },
-  // 5. National: bdnews24
+  // 3. National / Politics: bdnews24 (বিডিনিউজ২৪.কম)
   {
-    id: 'src-5',
+    id: 'src-3',
     name: 'bdnews24.com Bangla (বিডিনিউজ২৪.কম)',
     type: 'rss',
     url: 'https://bangla.bdnews24.com/feed',
-    categoryId: 'national',
+    categoryId: 'politics',
     region: 'national',
     description: 'প্রথম ২৪/৭ অনলাইন পত্রিকা - তাৎক্ষণিক ব্রেকিং ও বিচার-প্রশাসন সংবাদ',
-    fetchIntervalMinutes: 15,
+    fetchIntervalMinutes: 10,
     status: 'active',
-    autoPublish: false,
-    lastFetchedAt: '২০২৬-০৩-০৪ ১০:৫০ পূর্বাহ্ন',
+    autoPublish: true,
+    lastFetchedAt: '২০২৬-০৩-০৫ ১০:৫০ পূর্বাহ্ন',
     articlesImported: 98,
     keywordFilters: ['ব্রেকিং', 'আদালত', 'আইনশৃঙ্খলা']
   },
-  // 6. International: Al Jazeera
+  // 4. International: BBC Bangla (বিবিসি বাংলা)
   {
-    id: 'src-6',
-    name: 'Al Jazeera International (আল জাজিরা)',
+    id: 'src-4',
+    name: 'BBC News Bangla (বিবিসি বাংলা আরএসএস)',
     type: 'rss',
-    url: 'https://www.aljazeera.com/xml/rss/all.xml',
+    url: 'https://feeds.bbci.co.uk/bengali/rss.xml',
     categoryId: 'international',
     region: 'international',
-    description: 'মধ্যপ্রাচ্য ও বৈশ্বিক ভূরাজনীতি, মানবাধিকার ও মানবিক সংকট বিশ্লেষণ',
-    fetchIntervalMinutes: 25,
+    description: 'আন্তর্জাতিক ভূরাজনীতি, বিশ্ব কূটনীতি ও বস্তুনিষ্ঠ তথ্যভিত্তিক বৈশ্বিক সংবাদ',
+    fetchIntervalMinutes: 10,
     status: 'active',
-    autoPublish: false,
-    lastFetchedAt: '২০২৬-০৩-০৪ ০৮:২০ পূর্বাহ্ন',
-    articlesImported: 78
+    autoPublish: true,
+    lastFetchedAt: '২০২৬-০৩-০৫ ১১:০৫ পূর্বাহ্ন',
+    articlesImported: 215,
+    keywordFilters: ['আন্তর্জাতিক', 'কূটনীতি', 'জলবায়ু', 'জাতিসংঘ']
   },
-  // 7. National: The Daily Star
+  // 5. Economy: Daily Jugantor (দৈনিক যুগান্তর)
   {
-    id: 'src-7',
-    name: 'The Daily Star (দ্য ডেইলি স্টার ফ্রন্টপেজ)',
+    id: 'src-5',
+    name: 'Daily Jugantor (দৈনিক যুগান্তর)',
     type: 'rss',
-    url: 'https://www.thedailystar.net/frontpage/rss.xml',
-    categoryId: 'business',
+    url: 'https://www.jugantor.com/feed/rss.xml',
+    categoryId: 'economy',
     region: 'national',
-    description: 'ইংরেজি শীর্ষ দৈনিক - ম্যাক্রো অর্থনীতি, রপ্তানি বাণিজ্য ও শিল্প বিশ্লেষণ',
-    fetchIntervalMinutes: 45,
+    description: 'শীর্ষ জাতীয় দৈনিক - অর্থনীতি, বাজার বিশ্লেষণ ও ব্যবসা-বাণিজ্যের নিয়মিত আরএসএস',
+    fetchIntervalMinutes: 10,
     status: 'active',
-    autoPublish: false,
-    lastFetchedAt: '২০২৬-০৩-০৪ ০৯:০০ পূর্বাহ্ন',
-    articlesImported: 64
+    autoPublish: true,
+    lastFetchedAt: '২০২৬-০৩-০৫ ০৯:৪০ পূর্বাহ্ন',
+    articlesImported: 110,
+    keywordFilters: ['অর্থনীতি', 'ব্যাংক', 'রপ্তানি', 'ব্যবসা']
   },
-  // 8. International: DW Bangla
+  // 6. Technology & Science: DW Bangla (ডয়েচে ভেলে বাংলা)
   {
-    id: 'src-8',
+    id: 'src-6',
     name: 'DW Bangla (ডয়েচে ভেলে বাংলা)',
     type: 'rss',
     url: 'https://rss.dw.com/rdf/rss-ben-all',
-    categoryId: 'international',
+    categoryId: 'technology',
     region: 'international',
-    description: 'ইউরোপের রাজনীতি, পরিবেশ বিজ্ঞান ও বিশ্ব সংস্কৃতির বাংলা ফিড',
-    fetchIntervalMinutes: 40,
+    description: 'বিজ্ঞান প্রযুক্তি, পরিবেশ ও বিশ্ব সংস্কৃতির নির্ভরযোগ্য বাংলা সংবাদ প্রবাহ',
+    fetchIntervalMinutes: 10,
     status: 'active',
-    autoPublish: false,
-    lastFetchedAt: '২০২৬-০৩-০৪ ০৭:১৫ পূর্বাহ্ন',
-    articlesImported: 52
+    autoPublish: true,
+    lastFetchedAt: '২০২৬-০৩-০৫ ০৭:১৫ পূর্বাহ্ন',
+    articlesImported: 86
   }
 ];
 
