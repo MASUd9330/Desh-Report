@@ -61,9 +61,32 @@ export const formatRelativeBanglaTime = (dateString: string): string => {
   return formatBengaliDate(dateString);
 };
 
+// Clean news headline by removing any accidental timestamps, bracketed tags, or hashes
+export const cleanHeadline = (text?: string): string => {
+  if (!text) return '';
+  return text
+    // Remove brackets with time e.g. [১০:৪৩ PM], [10:43 PM], [১০:৪৩], [10:43 am], [05:30]
+    .replace(/\[\s*[\u09E6-\u09EF0-9:]+\s*(?:AM|PM|am|pm|পূর্বাহ্ন|অপরাহ্ন)?\s*\]/gi, '')
+    // Remove parentheses with time e.g. (১০:৪৩ PM)
+    .replace(/\(\s*[\u09E6-\u09EF0-9:]+\s*(?:AM|PM|am|pm|পূর্বাহ্ন|অপরাহ্ন)?\s*\)/gi, '')
+    // Remove (#1234), (#৫৯৮০), (#...)
+    .replace(/\(\s*#[\u09E6-\u09EF0-9a-zA-Z]+\s*\)/g, '')
+    // Remove [#1234]
+    .replace(/\[\s*#[\u09E6-\u09EF0-9a-zA-Z]+\s*\]/g, '')
+    // Remove trailing (#...), (1234)
+    .replace(/\(\s*[\u09E6-\u09EF0-9]+\s*\)\s*$/g, '')
+    // Remove trailing #1234 or #৫৯৮০
+    .replace(/#[\u09E6-\u09EF0-9]+\s*$/g, '')
+    // Remove multiple spaces, dangling hyphens/colons at end
+    .replace(/\s+/g, ' ')
+    .replace(/[\s\-–—:;]+$/g, '')
+    .trim();
+};
+
 // Generate SEO Slug
 export const generateSlug = (text: string): string => {
-  return text
+  const clean = cleanHeadline(text);
+  return clean
     .toLowerCase()
     .trim()
     .replace(/[^\w\s\u0980-\u09FF-]/g, '')

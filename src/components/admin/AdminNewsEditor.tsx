@@ -19,9 +19,13 @@ import {
   Send,
   Share2,
   RefreshCw,
-  PlusCircle
+  PlusCircle,
+  Link as LinkIcon,
+  Image as ImageIcon,
+  Loader2
 } from 'lucide-react';
 import { autoPublishArticle, getStoredSocialConfig } from '../../services/socialPublisher';
+import { generateAiNewsImageUrl, fetchArticleOgImage, getExactTopicImage } from '../../services/rssService';
 
 export const AdminNewsEditor: React.FC = () => {
   const {
@@ -83,6 +87,66 @@ export const AdminNewsEditor: React.FC = () => {
   const [autoPostFacebook, setAutoPostFacebook] = useState(true);
   const [socialPublishing, setSocialPublishing] = useState(false);
   const [socialNotice, setSocialNotice] = useState<string | null>(null);
+
+  // Image Generation & Extraction Loading States
+  const [isGeneratingAiImage, setIsGeneratingAiImage] = useState(false);
+  const [isExtractingOgImage, setIsExtractingOgImage] = useState(false);
+
+  const handleGenerateAiImage = () => {
+    if (!title.trim()) {
+      setErrorMessage('এআই দিয়ে ছবি তৈরির জন্য প্রথমে সংবাদের একটি শিরোনাম দিন');
+      return;
+    }
+    setIsGeneratingAiImage(true);
+    try {
+      const generatedUrl = generateAiNewsImageUrl(title, summary, categoryId);
+      setFeaturedImage(generatedUrl);
+      if (!imageCaption) {
+        setImageCaption(`${title} - এআই সম্পাদিত সংবাদ চিত্র`);
+      }
+      setImageCredit('AI News Editorial Photo');
+      setNotification('সংবাদের বিষয়ের সাথে হুবহু সামঞ্জস্যপূর্ণ এআই ছবি তৈরি করা হয়েছে');
+      setTimeout(() => setNotification(null), 3000);
+    } finally {
+      setIsGeneratingAiImage(false);
+    }
+  };
+
+  const handleFetchSourceOgImage = async () => {
+    if (!sourceUrl || !sourceUrl.startsWith('http')) {
+      setErrorMessage('সোর্স ওয়েবসাইট থেকে ছবি আনতে নিচে সোর্স ইউআরএল (Source URL) প্রদান করুন');
+      return;
+    }
+    setIsExtractingOgImage(true);
+    try {
+      const ogUrl = await fetchArticleOgImage(sourceUrl);
+      if (ogUrl) {
+        setFeaturedImage(ogUrl);
+        setImageCredit(source || 'মূল নিউজ সোর্স');
+        setNotification('মূল নিউজ পোর্টাল থেকে আসল সংবাদ চিত্র সংগ্রহ করা হয়েছে');
+        setTimeout(() => setNotification(null), 3000);
+      } else {
+        // Fallback to topic or AI
+        const fallback = getExactTopicImage(title, categoryId) || generateAiNewsImageUrl(title, summary, categoryId);
+        setFeaturedImage(fallback);
+        setNotification('সোর্স থেকে ছবি পাওয়া যায়নি; বিষয়ের সাথে সামঞ্জস্যপূর্ণ সেরা ছবি দেওয়া হলো');
+        setTimeout(() => setNotification(null), 3000);
+      }
+    } catch (err) {
+      const fallback = getExactTopicImage(title, categoryId);
+      setFeaturedImage(fallback);
+    } finally {
+      setIsExtractingOgImage(false);
+    }
+  };
+
+  const handleMatchTopicImage = () => {
+    const topicImg = getExactTopicImage(title, categoryId);
+    setFeaturedImage(topicImg);
+    setImageCredit('দেশরিপোর্ট আর্কাইভ ফটো');
+    setNotification('সংবাদের বিষয়ের জন্য নির্দিষ্ট আর্কাইভ ছবি সেট করা হয়েছে');
+    setTimeout(() => setNotification(null), 3000);
+  };
 
   useEffect(() => {
     if (!existingArticle && title) {
@@ -620,16 +684,73 @@ export const AdminNewsEditor: React.FC = () => {
 
           {/* Featured Image Picker */}
           <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-5 shadow-xs space-y-3">
-            <h3 className="font-bold text-sm text-gray-900 dark:text-white border-b border-gray-100 dark:border-slate-800 pb-2">
-              Featured Image
-            </h3>
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-2">
+              <h3 className="font-bold text-sm text-gray-900 dark:text-white">
+                Featured Image
+              </h3>
+              <span className="text-[10px] px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold rounded-full border border-indigo-200/50">
+                HD 16:9
+              </span>
+            </div>
 
-            <div className="aspect-16/10 w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
+            <div className="aspect-16/10 w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 relative group">
               <img
                 src={featuredImage}
                 alt="Featured Preview"
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  // If image fails to load, gracefully fall back to topic or AI
+                  (e.target as HTMLImageElement).src = getExactTopicImage(title, categoryId);
+                }}
               />
+              {(isGeneratingAiImage || isExtractingOgImage) && (
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center text-white gap-2">
+                  <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
+                  <span className="text-xs font-semibold">
+                    {isGeneratingAiImage ? 'এআই ছবি তৈরি হচ্ছে...' : 'আসল ছবি সংগ্রহ হচ্ছে...'}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Image Tools for 100% Content Accuracy */}
+            <div className="space-y-1.5 pt-1">
+              <p className="text-[11px] font-bold text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                <span>সঠিক ছবি পাওয়ার দ্রুত টুলস:</span>
+              </p>
+              <div className="grid grid-cols-1 gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleGenerateAiImage}
+                  disabled={isGeneratingAiImage}
+                  className="flex items-center justify-center gap-1.5 w-full py-1.5 px-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                  <span>✨ শিরোনাম অনুযায়ী এআই ছবি তৈরি করুন</span>
+                </button>
+
+                {sourceUrl && (
+                  <button
+                    type="button"
+                    onClick={handleFetchSourceOgImage}
+                    disabled={isExtractingOgImage}
+                    className="flex items-center justify-center gap-1.5 w-full py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+                  >
+                    <LinkIcon className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>🔗 সোর্স লিংক থেকে আসল ছবি আনুন</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleMatchTopicImage}
+                  className="flex items-center justify-center gap-1.5 w-full py-1.5 px-2 bg-gray-50 hover:bg-gray-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-slate-700 rounded-lg text-xs font-medium cursor-pointer transition-colors"
+                >
+                  <ImageIcon className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                  <span>🎯 টপিক অনুযায়ী আর্কাইভ ছবি</span>
+                </button>
+              </div>
             </div>
 
             <div>

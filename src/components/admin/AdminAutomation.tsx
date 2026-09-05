@@ -359,7 +359,7 @@ export const AdminAutomation: React.FC = () => {
           </div>
         </div>
 
-        {/* Card 2: 15-Minute Draft Auto-Post Engine */}
+        {/* Card 2: Draft Auto-Post Engine */}
         <div className="bg-linear-to-br from-emerald-500/10 via-teal-500/5 to-transparent dark:from-emerald-950/40 dark:via-teal-950/20 dark:to-slate-900 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-4">
           <div>
             <div className="flex items-center justify-between">
@@ -369,14 +369,14 @@ export const AdminAutomation: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
-                    <span>১৫ মিনিট অটো-পোস্ট ইঞ্জিন</span>
+                    <span>{autoPostIntervalMinutes} মিনিট ড্রাফট অটো-পোস্ট ইঞ্জিন</span>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                       {autoPostDraftsEnabled ? 'স্বয়ংক্রিয় সক্রিয়' : 'পজ করা'}
                     </span>
                   </h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    ড্রাফট কিউ থেকে প্রতি ১৫ মিনিটে নির্দিষ্ট সংখ্যক সংবাদ স্বয়ংক্রিয়ভাবে প্রকাশ করে
+                    ড্রাফট কিউ থেকে প্রতি {autoPostIntervalMinutes} মিনিটে নির্দিষ্ট সংখ্যক সংবাদ স্বয়ংক্রিয়ভাবে প্রকাশ করে
                   </p>
                 </div>
               </div>
@@ -425,8 +425,9 @@ export const AdminAutomation: React.FC = () => {
                 onChange={e => setAutoPostIntervalMinutes(Number(e.target.value))}
                 className="bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-md px-2 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 focus:outline-hidden"
               >
-                <option value={10}>১০ মিনিট পর পর</option>
-                <option value={15}>১৫ মিনিট পর পর (স্ট্যান্ডার্ড)</option>
+                <option value={5}>৫ মিনিট পর পর (দ্রুত অটো-পোস্ট)</option>
+                <option value={10}>১০ মিনিট পর পর (স্ট্যান্ডার্ড)</option>
+                <option value={15}>১৫ মিনিট পর পর</option>
                 <option value={20}>২০ মিনিট পর পর</option>
                 <option value={30}>৩০ মিনিট পর পর</option>
               </select>
@@ -438,6 +439,7 @@ export const AdminAutomation: React.FC = () => {
               >
                 <option value={1}>১টি করে পোস্ট</option>
                 <option value={2}>২টি করে পোস্ট</option>
+                <option value={3}>৩টি করে পোস্ট</option>
                 <option value={5}>৫টি করে পোস্ট</option>
               </select>
             </div>

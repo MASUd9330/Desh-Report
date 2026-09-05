@@ -26,10 +26,18 @@ import {
   initialUsers
 } from '../data/initialData';
 import { trustedFeedPresets } from '../data/trustedFeeds';
-import { calculateSimilarity, generateSlug, calculateReadingTime } from '../utils/helpers';
+import { calculateSimilarity, generateSlug, calculateReadingTime, cleanHeadline } from '../utils/helpers';
 import { autoPublishArticle } from '../services/socialPublisher';
 import { notifySearchEnginesOfNewArticle } from '../services/indexingService';
-import { fetchLiveRssFeed, generateDynamicFreshNews, getRandomCategoryImage } from '../services/rssService';
+import {
+  fetchLiveRssFeed,
+  generateDynamicFreshNews,
+  getRandomCategoryImage,
+  generateAiNewsImageUrl,
+  fetchArticleOgImage,
+  getExactTopicImage,
+  expandToFullJournalisticArticle
+} from '../services/rssService';
 
 interface NewsContextType {
   // Navigation & State
@@ -79,6 +87,11 @@ interface NewsContextType {
   deleteArticle: (id: string) => void;
   changeArticleStatus: (id: string, status: NewsStatus) => void;
   recordArticleView: (id: string) => void;
+
+  // Image Helper Actions
+  generateAiImageForArticle: (title: string, summary?: string, categoryId?: string) => string;
+  fetchArticleOgImage: (url: string) => Promise<string | null>;
+  getExactTopicImage: (headline: string, categoryId?: string) => string;
 
   // Breaking News Actions
   breakingAutoTriggerEnabled: boolean;
@@ -174,7 +187,8 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     for (const art of list) {
       if (!art || !art.id) continue;
-      const normalizedTitle = (art.title || '').trim().toLowerCase().replace(/\s+/g, ' ');
+      const cleanTitle = cleanHeadline(art.title || 'শিরোনামহীন সংবাদ');
+      const normalizedTitle = cleanTitle.trim().toLowerCase().replace(/\s+/g, ' ');
       if (seenIds.has(art.id) || seenTitles.has(normalizedTitle)) continue;
 
       seenIds.add(art.id);
@@ -184,30 +198,36 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const isStaleArt1 = art.id === 'art-1';
       const isHero = isStaleArt1 ? false : !!art.isFeaturedHero;
 
-      // Directly publish any drafts so new site has all news live immediately as requested
-      if (art.status === 'draft') {
-        cleanArticles.push({
-          ...art,
-          isFeaturedHero: isHero,
-          status: 'published'
-        });
-      } else {
-        cleanArticles.push({
-          ...art,
-          isFeaturedHero: isHero
-        });
-      }
+      // Expand short contents to full multi-paragraph journalistic articles
+      const expanded = expandToFullJournalisticArticle(cleanTitle, art.summary, art.content, art.categoryId);
+
+      cleanArticles.push({
+        ...art,
+        title: expanded.title,
+        summary: expanded.summary,
+        content: expanded.content,
+        readingTimeMinutes: calculateReadingTime(expanded.content),
+        isFeaturedHero: isHero,
+        status: 'published'
+      });
     }
 
     // Ensure all unique articles from initialArticles exist
     for (const art of initialArticles) {
-      const normalizedTitle = (art.title || '').trim().toLowerCase().replace(/\s+/g, ' ');
+      const cleanTitle = cleanHeadline(art.title || 'শিরোনামহীন সংবাদ');
+      const normalizedTitle = cleanTitle.trim().toLowerCase().replace(/\s+/g, ' ');
       if (!seenIds.has(art.id) && !seenTitles.has(normalizedTitle)) {
         seenIds.add(art.id);
         seenTitles.add(normalizedTitle);
+        const expanded = expandToFullJournalisticArticle(cleanTitle, art.summary, art.content, art.categoryId);
         cleanArticles.push({
           ...art,
-          isFeaturedHero: art.id === 'art-1' ? false : art.isFeaturedHero
+          title: expanded.title,
+          summary: expanded.summary,
+          content: expanded.content,
+          readingTimeMinutes: calculateReadingTime(expanded.content),
+          isFeaturedHero: art.id === 'art-1' ? false : art.isFeaturedHero,
+          status: 'published'
         });
       }
     }
@@ -330,14 +350,14 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   });
 
-  const [rssSyncIntervalMinutes, setRssSyncIntervalMinutes] = useState<number>(10); // 10 Minutes
-  const [autoPostIntervalMinutes, setAutoPostIntervalMinutes] = useState<number>(15); // 15 Minutes
-  const [autoPostBatchSize, setAutoPostBatchSize] = useState<number>(1); // 1 draft per 15 min cycle
+  const [rssSyncIntervalMinutes, setRssSyncIntervalMinutes] = useState<number>(10); // 10 Minutes RSS Sync
+  const [autoPostIntervalMinutes, setAutoPostIntervalMinutes] = useState<number>(5); // 5 Minutes Auto-Post
+  const [autoPostBatchSize, setAutoPostBatchSize] = useState<number>(1); // 1 draft per cycle
 
   const [lastRssSyncAt, setLastRssSyncAt] = useState<string>('সক্রিয় (Active)');
   const [lastAutoPostAt, setLastAutoPostAt] = useState<string>('সক্রিয় (Active)');
   const [nextRssSyncSeconds, setNextRssSyncSeconds] = useState<number>(10 * 60);
-  const [nextAutoPostSeconds, setNextAutoPostSeconds] = useState<number>(15 * 60);
+  const [nextAutoPostSeconds, setNextAutoPostSeconds] = useState<number>(5 * 60);
 
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([
     {
@@ -696,19 +716,21 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Article Actions
   const addArticle = (data: Partial<Article>): Article => {
-    const title = data.title || 'শিরোনামহীন সংবাদ';
-    const slug = data.slug || generateSlug(title);
-    const content = data.content || '';
-    const readingTime = calculateReadingTime(content);
+    const rawTitle = data.title || 'শিরোনামহীন সংবাদ';
+    const title = cleanHeadline(rawTitle);
+    const slug = data.slug ? generateSlug(data.slug) : generateSlug(title);
+    const rawContent = data.content || '';
+    const expanded = expandToFullJournalisticArticle(title, data.summary, rawContent, data.categoryId || 'national');
+    const readingTime = calculateReadingTime(expanded.content);
 
     const newArticle: Article = {
       id: 'art-' + Date.now(),
-      title,
+      title: expanded.title,
       slug,
       subtitle: data.subtitle || '',
-      summary: data.summary || content.slice(0, 150) + '...',
-      content,
-      featuredImage: data.featuredImage || 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&auto=format&fit=crop&q=80',
+      summary: expanded.summary,
+      content: expanded.content,
+      featuredImage: data.featuredImage || getExactTopicImage(expanded.title, data.categoryId || 'national') || 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&auto=format&fit=crop&q=80',
       imageCaption: data.imageCaption || '',
       imageCredit: data.imageCredit || 'দেশরিপোর্ট',
       categoryId: data.categoryId || 'national',
@@ -730,8 +752,8 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isBreaking: data.isBreaking || false,
       isTrending: data.isTrending || false,
       isEditorsChoice: data.isEditorsChoice || false,
-      seoTitle: data.seoTitle || `${title} | DeshReport`,
-      metaDescription: data.metaDescription || (data.summary || title),
+      seoTitle: data.seoTitle || `${expanded.title} | DeshReport`,
+      metaDescription: data.metaDescription || (expanded.summary || expanded.title),
       focusKeyword: data.focusKeyword || '',
       canonicalUrl: data.canonicalUrl || `https://deshreport.com/article/${slug}`
     };
@@ -1153,15 +1175,20 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         const shouldDirectPublish = src.autoPublish !== false;
         const status: NewsStatus = shouldDirectPublish ? 'published' : 'draft';
-        const isWarFocus = item.title.includes('ইরান') || item.title.includes('যুক্তরাষ্ট্র') || item.title.includes('যুদ্ধ');
-        
+        const cleanTitle = cleanHeadline(item.title);
+        const expanded = expandToFullJournalisticArticle(cleanTitle, item.summary, item.content, item.cat || src.categoryId);
+        const isWarFocus = cleanTitle.includes('ইরান') || cleanTitle.includes('যুক্তরাষ্ট্র') || cleanTitle.includes('যুদ্ধ');
+        const resolvedImage = item.image && item.image.trim().length > 0 && !item.image.includes('placeholder')
+          ? item.image
+          : (getExactTopicImage(expanded.title, item.cat || src.categoryId) || generateAiNewsImageUrl(expanded.title, expanded.summary, item.cat || src.categoryId));
+
         const newArt: Article = {
           id: 'art-auto-' + Date.now() + '-' + imported + '-' + Math.random().toString(36).substring(2, 6),
-          title: item.title,
-          slug: generateSlug(item.title) + '-' + Math.floor(Math.random() * 10000),
-          summary: item.summary,
-          content: item.content,
-          featuredImage: item.image || getRandomCategoryImage(src.categoryId),
+          title: expanded.title,
+          slug: generateSlug(expanded.title) + '-' + Math.floor(Math.random() * 10000),
+          summary: expanded.summary,
+          content: expanded.content,
+          featuredImage: resolvedImage,
           categoryId: item.cat || src.categoryId,
           authorId: 'usr-admin-masud',
           authorName: `দেশরিপোর্ট ডেস্ক (${src.name})`,
@@ -1175,7 +1202,7 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
           sourceUrl: item.sourceUrl,
           publishedAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          readingTimeMinutes: calculateReadingTime(item.content || item.summary || ''),
+          readingTimeMinutes: calculateReadingTime(expanded.content || expanded.summary || ''),
           viewCount: Math.floor(Math.random() * 40) + 15,
           shareCount: 0,
           isBreaking: isWarFocus,
@@ -1192,14 +1219,20 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const freshFallback = generateDynamicFreshNews(src.name, src.categoryId, src.region);
       for (const item of freshFallback) {
         const status: NewsStatus = src.autoPublish !== false ? 'published' : 'draft';
-        const isWarFocus = item.title.includes('ইরান') || item.title.includes('যুক্তরাষ্ট্র');
+        const cleanTitle = cleanHeadline(item.title);
+        const expanded = expandToFullJournalisticArticle(cleanTitle, item.summary, item.content, item.cat || src.categoryId);
+        const isWarFocus = cleanTitle.includes('ইরান') || cleanTitle.includes('যুক্তরাষ্ট্র');
+        const fallbackResolvedImage = item.image && item.image.trim().length > 0
+          ? item.image
+          : (getExactTopicImage(expanded.title, item.cat || src.categoryId) || generateAiNewsImageUrl(expanded.title, expanded.summary, item.cat || src.categoryId));
+
         const fallbackArt: Article = {
           id: 'art-auto-' + Date.now() + '-fsh-' + Math.random().toString(36).substring(2, 6),
-          title: item.title,
-          slug: generateSlug(item.title) + '-' + Math.floor(Math.random() * 10000),
-          summary: item.summary,
-          content: item.content,
-          featuredImage: item.image || getRandomCategoryImage(src.categoryId),
+          title: expanded.title,
+          slug: generateSlug(expanded.title) + '-' + Math.floor(Math.random() * 10000),
+          summary: expanded.summary,
+          content: expanded.content,
+          featuredImage: fallbackResolvedImage,
           categoryId: item.cat || src.categoryId,
           authorId: 'usr-admin-masud',
           authorName: `দেশরিপোর্ট ডেস্ক (${src.name})`,
@@ -1208,7 +1241,7 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
           sourceUrl: item.sourceUrl,
           publishedAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          readingTimeMinutes: calculateReadingTime(item.content || item.summary || ''),
+          readingTimeMinutes: calculateReadingTime(expanded.content || expanded.summary || ''),
           viewCount: Math.floor(Math.random() * 40) + 15,
           shareCount: 0,
           isTrending: isWarFocus,
@@ -1325,7 +1358,7 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setNextAutoPostSeconds(autoPostIntervalMinutes * 60);
 
     toPublish.forEach(p => {
-      addActivityLog('অটো-পোস্ট সফল', 'article', `১৫ মিনিট শিডিউল: "${p.title.slice(0, 30)}..." প্রকাশিত হয়েছে`);
+      addActivityLog('অটো-পোস্ট সফল', 'article', `${autoPostIntervalMinutes} মিনিট শিডিউল: "${p.title.slice(0, 30)}..." প্রকাশিত হয়েছে`);
     });
 
     return toPublish.length;
@@ -1511,6 +1544,9 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         deleteArticle,
         changeArticleStatus,
         recordArticleView,
+        generateAiImageForArticle: generateAiNewsImageUrl,
+        fetchArticleOgImage,
+        getExactTopicImage,
         breakingAutoTriggerEnabled,
         lastBreakingAutoTriggerAt,
         toggleBreakingAutoTrigger,
