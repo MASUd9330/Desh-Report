@@ -223,11 +223,11 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [categories, setCategories] = useState<Category[]>(() => loadLocal('categories', initialCategories));
   const [breakingNews, setBreakingNews] = useState<BreakingNewsItem[]>(() => {
     const loaded = loadLocal<BreakingNewsItem[]>('breaking', initialBreakingNews);
-    if (loaded && loaded.length >= 6) {
-      return loaded;
-    }
     const existingIds = new Set((loaded || []).map(b => b.id));
-    const merged = [...(loaded || []), ...initialBreakingNews.filter(b => !existingIds.has(b.id))];
+    // Prioritize initial breaking news items (which now include Iran-US war alerts)
+    const iranItems = initialBreakingNews.filter(b => b.id.includes('iran-us'));
+    const nonIranExisting = (loaded || []).filter(b => !b.id.includes('iran-us'));
+    const merged = [...iranItems, ...nonIranExisting, ...initialBreakingNews.filter(b => !existingIds.has(b.id) && !b.id.includes('iran-us'))];
     return merged.length > 0 ? merged : initialBreakingNews;
   });
   const [advertisements, setAdvertisements] = useState<Advertisement[]>(() => loadLocal('ads', initialAds));
@@ -263,11 +263,20 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return {
       ...initialSiteSettings,
       ...loaded,
-      address: 'খিলগাঁও, ঢাকা - ১২১৯',
-      editorName: 'মোহাম্মদ মাসুদ রানা'
+      contactPhone: '',
+      address: 'খিলগাঁও, ঢাকা - ১২১৯, বাংলাদেশ',
+      editorName: 'মোহাম্মদ মাসুদ রানা',
+      featuredTopic: loaded.featuredTopic || initialSiteSettings.featuredTopic
     };
   });
-  const [pages, setPages] = useState<PageItem[]>(() => loadLocal('pages', initialPages));
+  const [pages, setPages] = useState<PageItem[]>(() => {
+    // If local pages has short outdated placeholder content, prioritize initialPages
+    const loaded = loadLocal<PageItem[]>('pages', initialPages);
+    if (!Array.isArray(loaded) || loaded.length === 0 || loaded[0]?.contentBn?.length < 150) {
+      return initialPages;
+    }
+    return loaded;
+  });
   const [users] = useState<User[]>(initialUsers);
   const [currentUser, setCurrentUser] = useState<User>(initialUsers[0]); // Default Tanvir Ahmed (Super Admin)
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {

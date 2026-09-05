@@ -68,10 +68,12 @@ export const Footer: React.FC = () => {
                 <Mail className="w-4 h-4 text-red-500 shrink-0" />
                 <span>{siteSettings.contactEmail}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-red-500 shrink-0" />
-                <span>{siteSettings.contactPhone}</span>
-              </div>
+              {siteSettings.contactPhone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-red-500 shrink-0" />
+                  <span>{siteSettings.contactPhone}</span>
+                </div>
+              )}
             </div>
 
             {/* Social Icons */}

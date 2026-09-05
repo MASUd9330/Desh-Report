@@ -168,7 +168,13 @@ export interface SiteSettings {
   telegramUrl: string;
   youtubeUrl: string;
   xUrl: string;
+  pinterestUrl?: string;
   whatsappNumber: string;
+  featuredTopic?: {
+    tag: string;
+    titleBn: string;
+    active: boolean;
+  };
   googleAnalyticsId: string;
   googleSearchConsoleMeta: string;
   googleSearchConsoleCode?: string;

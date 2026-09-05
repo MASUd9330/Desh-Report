@@ -14,7 +14,11 @@ import {
   Send,
   Globe,
   Lock,
-  Heart
+  Heart,
+  Flame,
+  Radio,
+  TrendingUp,
+  Twitter
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -27,6 +31,7 @@ export const Header: React.FC = () => {
     navigateToCategory,
     navigateToAdmin,
     setSearchOpen,
+    setSearchQuery,
     activeCategorySlug,
     isAdminAuthenticated
   } = useNews();
@@ -55,15 +60,33 @@ export const Header: React.FC = () => {
             </span>
           </div>
 
-          {/* Center: Slogan / Tagline */}
-          <div className="hidden lg:flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
-            <span className="font-semibold text-gray-700 dark:text-gray-200">
-              {siteSettings.taglineBn}
-            </span>
-            <span className="text-gray-400 dark:text-gray-500 text-[11px]">
-              ({siteSettings.taglineEn})
-            </span>
+          {/* Center: Topic Spotlight / Iran-US War Tag & Tagline */}
+          <div className="hidden lg:flex items-center gap-3">
+            {/* Pinned Iran-US War Focus Chip */}
+            <button
+              onClick={() => {
+                setSearchQuery('ইরান-যুক্তরাষ্ট্র যুদ্ধ');
+                setSearchOpen(true);
+              }}
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-600/10 hover:bg-red-600/20 text-red-700 dark:text-red-400 border border-red-300/80 dark:border-red-900/60 text-[11px] font-bold tracking-tight transition-all cursor-pointer shadow-2xs group"
+              title="ইরান-যুক্তরাষ্ট্র যুদ্ধ সংক্রান্ত সকল সংবাদ ও বিশ্লেষণ"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping"></span>
+              <Flame className="w-3 h-3 text-red-600 dark:text-red-400 shrink-0" />
+              <span>মূল ফোকাস: ইরান-যুক্তরাষ্ট্র যুদ্ধ</span>
+              <span className="text-[10px] bg-red-600 text-white rounded px-1 py-0.2 font-medium">লাইভ</span>
+            </button>
+
+            <span className="text-gray-300 dark:text-gray-700">|</span>
+
+            <div className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
+              <span className="font-semibold">
+                {siteSettings.taglineBn}
+              </span>
+              <span className="text-gray-400 dark:text-gray-500 text-[11px]">
+                ({siteSettings.taglineEn})
+              </span>
+            </div>
           </div>
 
           {/* Right: Social Media, Theme Toggle & Admin Switcher */}
@@ -97,6 +120,17 @@ export const Header: React.FC = () => {
               >
                 <Send className="w-3.5 h-3.5" />
               </a>
+              {siteSettings.xUrl && (
+                <a
+                  href={siteSettings.xUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+                  aria-label="X (Twitter)"
+                >
+                  <Twitter className="w-3.5 h-3.5" />
+                </a>
+              )}
             </div>
 
             {/* Reader Revenue Contribution Button */}
@@ -240,6 +274,21 @@ export const Header: React.FC = () => {
                 )}
               </li>
             )}
+
+            {/* Persistent Right-Side Spotlight: Iran-US War */}
+            <li className="ml-auto shrink-0 pl-2">
+              <button
+                onClick={() => {
+                  setSearchQuery('ইরান-যুক্তরাষ্ট্র যুদ্ধ');
+                  setSearchOpen(true);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-linear-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+                title="ইরান-যুক্তরাষ্ট্র যুদ্ধ সংক্রান্ত সকল সংবাদ"
+              >
+                <Flame className="w-3.5 h-3.5 fill-white text-white" />
+                <span>ইরান-যুক্তরাষ্ট্র যুদ্ধ</span>
+              </button>
+            </li>
           </ul>
         </div>
       </nav>
@@ -273,6 +322,22 @@ export const Header: React.FC = () => {
 
             {/* Drawer Nav Items */}
             <div className="flex-1 overflow-y-auto p-4 space-y-1">
+              {/* Spotlight focus button in mobile */}
+              <button
+                onClick={() => {
+                  setSearchQuery('ইরান-যুক্তরাষ্ট্র যুদ্ধ');
+                  setSearchOpen(true);
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 mb-2 rounded-lg bg-red-600 text-white font-bold text-xs shadow-xs"
+              >
+                <div className="flex items-center gap-2">
+                  <Flame className="w-4 h-4 fill-white" />
+                  <span>ইরান-যুক্তরাষ্ট্র যুদ্ধ</span>
+                </div>
+                <span className="text-[10px] bg-white/25 px-1.5 py-0.5 rounded font-medium">লাইভ আপডেট</span>
+              </button>
+
               <button
                 onClick={() => {
                   navigateToHome();
@@ -280,7 +345,7 @@ export const Header: React.FC = () => {
                 }}
                 className={`w-full text-left px-3 py-2 rounded-md font-medium text-sm ${
                   !activeCategorySlug
-                    ? 'bg-red-600 text-white'
+                    ? 'bg-gray-100 dark:bg-slate-800 text-red-600 font-bold'
                     : 'text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-800'
                 }`}
               >
