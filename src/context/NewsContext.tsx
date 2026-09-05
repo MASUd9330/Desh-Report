@@ -179,14 +179,22 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       seenIds.add(art.id);
       seenTitles.add(normalizedTitle);
 
+      // Clear hardcoded stale lock on art-1 so hero is fully dynamic with newest news
+      const isStaleArt1 = art.id === 'art-1';
+      const isHero = isStaleArt1 ? false : !!art.isFeaturedHero;
+
       // Directly publish any drafts so new site has all news live immediately as requested
       if (art.status === 'draft') {
         cleanArticles.push({
           ...art,
+          isFeaturedHero: isHero,
           status: 'published'
         });
       } else {
-        cleanArticles.push(art);
+        cleanArticles.push({
+          ...art,
+          isFeaturedHero: isHero
+        });
       }
     }
 
@@ -196,9 +204,19 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!seenIds.has(art.id) && !seenTitles.has(normalizedTitle)) {
         seenIds.add(art.id);
         seenTitles.add(normalizedTitle);
-        cleanArticles.push(art);
+        cleanArticles.push({
+          ...art,
+          isFeaturedHero: art.id === 'art-1' ? false : art.isFeaturedHero
+        });
       }
     }
+
+    // Sort by latest published date first so newest updates naturally lead
+    cleanArticles.sort((a, b) => {
+      const timeA = new Date(a.publishedAt || a.updatedAt || 0).getTime();
+      const timeB = new Date(b.publishedAt || b.updatedAt || 0).getTime();
+      return timeB - timeA;
+    });
 
     return cleanArticles;
   });

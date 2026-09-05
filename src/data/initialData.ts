@@ -177,7 +177,7 @@ export const initialArticles: Article[] = [
     viewCount: 14820,
     shareCount: 1240,
     status: 'published',
-    isFeaturedHero: true,
+    isFeaturedHero: false,
     isTrending: true,
     seoTitle: 'মেট্রোরেলের কমলাপুর রুটের অগ্রগতি ও উদ্বোধনের সময়সূচি | DeshReport',
     metaDescription: 'মতিঝিল থেকে কমলাপুর মেট্রোরেল অংশের সর্বশেষ নির্মাণ অগ্রগতি ও উদ্বোধনের বিস্তারিত প্রতিবেদন পড়ুন দেশরিপোর্টে।'
