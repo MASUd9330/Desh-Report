@@ -19,7 +19,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store');
 
   if (req.method === 'GET') {
-    res.status(200).json({ ok: true, authenticated: hasValidAdminSession(req) });
+    res.status(200).json({ ok: true, authenticated: await hasValidAdminSession(req) });
     return;
   }
 
@@ -39,13 +39,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const password = typeof body.password === 'string' ? body.password : '';
   const identifier = typeof body.identifier === 'string' ? body.identifier : '';
 
-  if (!password || !verifyAdminIdentifier(identifier) || !verifyAdminPassword(password)) {
+  if (!password || !verifyAdminIdentifier(identifier) || !(await verifyAdminPassword(password))) {
     res.status(401).json({ ok: false, error: 'ইমেইল/আইডি অথবা পাসওয়ার্ড সঠিক নয়।' });
     return;
   }
 
   try {
-    res.setHeader('Set-Cookie', createSessionCookie());
+    res.setHeader('Set-Cookie', await createSessionCookie());
     res.status(200).json({ ok: true, authenticated: true });
   } catch (error: any) {
     res.status(500).json({ ok: false, error: error?.message || 'সেশন তৈরি করা যায়নি।' });

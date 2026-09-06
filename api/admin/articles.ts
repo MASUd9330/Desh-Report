@@ -47,7 +47,7 @@ async function getArticles(): Promise<Record<string, any>[]> {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store');
-  if (!requireAdmin(req, res)) return;
+  if (!(await requireAdmin(req, res))) return;
 
   try {
     if (req.method === 'GET') {

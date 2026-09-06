@@ -14,7 +14,7 @@ function readBody(req: VercelRequest): Record<string, any> {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store');
-  if (!requireAdmin(req, res)) return;
+  if (!(await requireAdmin(req, res))) return;
   try {
     if (req.method === 'GET') {
       res.status(200).json({ ok: true, settings: (await kvGet<Record<string, any>>(SETTINGS_KEY)) || null });
