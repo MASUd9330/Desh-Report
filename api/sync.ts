@@ -114,16 +114,82 @@ interface StoredArticle {
   status: 'published' | 'draft';
 }
 
-const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
-  national: 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=1200&auto=format&fit=crop&q=80',
-  international: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=1200&auto=format&fit=crop&q=80',
-  politics: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=1200&auto=format&fit=crop&q=80',
-  economy: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&auto=format&fit=crop&q=80',
-  technology: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&auto=format&fit=crop&q=80'
+// ---- খবরের শিরোনাম/সারাংশ পড়ে সঠিক ক্যাটাগরি বের করা (RSS ফিডের ফিক্সড ক্যাটাগরির বদলে) ----
+const CATEGORY_KEYWORDS: Record<string, string[]> = {
+  sports: ['ক্রিকেট', 'ফুটবল', 'খেলা', 'বিশ্বকাপ', 'টেস্ট', 'ওয়ানডে', 'টি-টোয়েন্টি', 'অলিম্পিক', 'ম্যাচ', 'গোল', 'বিপিএল', 'আইপিএল', 'মেসি', 'রোনালদো', 'সাকিব', 'তামিম'],
+  entertainment: ['সিনেমা', 'নাটক', 'গান', 'অভিনেতা', 'অভিনেত্রী', 'চলচ্চিত্র', 'বিনোদন', 'শোবিজ', 'নায়ক', 'নায়িকা', 'ওয়েব সিরিজ', 'সংগীতশিল্পী'],
+  technology: ['প্রযুক্তি', 'স্মার্টফোন', 'ইন্টারনেট', 'অ্যাপ', 'সফটওয়্যার', 'এআই', 'কৃত্রিম বুদ্ধিমত্তা', 'গুগল', 'ফেসবুক', 'গ্যাজেট', 'কম্পিউটার', 'রোবট'],
+  economy: ['অর্থনীতি', 'শেয়ারবাজার', 'ডলার', 'রিজার্ভ', 'বাজেট', 'মুদ্রাস্ফীতি', 'রপ্তানি', 'আমদানি', 'ব্যাংক', 'ঋণ', 'বাণিজ্য', 'জিডিপি', 'কর'],
+  health: ['স্বাস্থ্য', 'হাসপাতাল', 'চিকিৎসক', 'রোগ', 'ভ্যাকসিন', 'ডেঙ্গু', 'করোনা', 'চিকিৎসা', 'ওষুধ'],
+  international: ['যুক্তরাষ্ট্র', 'চীন', 'ভারত', 'পাকিস্তান', 'ইসরায়েল', 'ইরান', 'রাশিয়া', 'ইউক্রেন', 'জাতিসংঘ', 'আন্তর্জাতিক', 'বিশ্ব', 'গাজা', 'ফিলিস্তিন', 'যুদ্ধ'],
+  politics: ['নির্বাচন', 'সংসদ', 'রাজনীতি', 'মন্ত্রী', 'সরকার', 'বিরোধী দল', 'রাষ্ট্রপতি', 'প্রধানমন্ত্রী', 'দল', 'আওয়ামী লীগ', 'বিএনপি', 'জামায়াত']
 };
 
-function fallbackImage(categoryId: string): string {
-  return CATEGORY_FALLBACK_IMAGES[categoryId] || CATEGORY_FALLBACK_IMAGES.national;
+function categorizeArticle(title: string, description: string, fallbackCategoryId: string): string {
+  const text = `${title} ${description}`;
+  for (const [catId, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+    if (keywords.some(kw => text.includes(kw))) {
+      return catId;
+    }
+  }
+  return fallbackCategoryId || 'national';
+}
+
+// ---- প্রতিটা ক্যাটাগরির জন্য একাধিক ছবি (যাতে সব খবরে একই ছবি না বসে) ----
+const IMAGE_POOL: Record<string, string[]> = {
+  national: [
+    'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1524661135-423995f22d0b?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1573164713988-8665fc963095?w=1200&auto=format&fit=crop&q=80'
+  ],
+  politics: [
+    'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1200&auto=format&fit=crop&q=80'
+  ],
+  international: [
+    'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1494972308805-463bc619d34e?w=1200&auto=format&fit=crop&q=80'
+  ],
+  economy: [
+    'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1543286386-713bdd548da4?w=1200&auto=format&fit=crop&q=80'
+  ],
+  technology: [
+    'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&auto=format&fit=crop&q=80'
+  ],
+  sports: [
+    'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=1200&auto=format&fit=crop&q=80'
+  ],
+  entertainment: [
+    'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1524650359799-842906ca1c06?w=1200&auto=format&fit=crop&q=80'
+  ],
+  health: [
+    'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=1200&auto=format&fit=crop&q=80'
+  ]
+};
+
+function hashToIndex(text: string, mod: number): number {
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
+  }
+  return hash % mod;
+}
+
+function topicImage(title: string, categoryId: string): string {
+  const pool = IMAGE_POOL[categoryId] || IMAGE_POOL.national;
+  return pool[hashToIndex(title, pool.length)];
 }
 
 // ---- RSS পার্সার (রেগেক্স-ভিত্তিক, Node-এ DOMParser নেই বলে) ----
@@ -206,8 +272,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const log: string[] = [];
 
   try {
+    // ?reset=1 দিলে আগের সব আর্টিকেল মুছে নতুন করে শুরু হবে
+    // (পুরনো ভুল ক্যাটাগরি/ছবি-ওয়ালা আর্টিকেলগুলো সরিয়ে ফেলতে একবার ব্যবহার করো)
+    if (req.query.reset === '1') {
+      await kvSet(ARTICLES_KEY, []);
+      log.push('পুরনো সব আর্টিকেল রিসেট করা হয়েছে');
+    }
+
     const sources = (await kvGet<FeedSource[]>(SOURCES_KEY)) || DEFAULT_SOURCES;
-    const existingArticles = (await kvGet<StoredArticle[]>(ARTICLES_KEY)) || [];
+    const existingArticles = req.query.reset === '1' ? [] : (await kvGet<StoredArticle[]>(ARTICLES_KEY)) || [];
     const existingUrls = new Set(existingArticles.map(a => a.sourceUrl));
     const existingTitles = new Set(existingArticles.map(a => a.title.trim().toLowerCase()));
 
@@ -227,7 +300,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
 
           const { summary, content } = buildArticleContent(cleanTitle, item.description, src.name);
-          const resolvedImage = item.image && item.image.startsWith('http') ? item.image : fallbackImage(src.categoryId);
+          const resolvedCategoryId = categorizeArticle(cleanTitle, item.description, src.categoryId);
+          const resolvedImage = item.image && item.image.startsWith('http') ? item.image : topicImage(cleanTitle, resolvedCategoryId);
 
           const article: StoredArticle = {
             id: 'art-auto-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
@@ -236,7 +310,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             summary,
             content,
             featuredImage: resolvedImage,
-            categoryId: src.categoryId,
+            categoryId: resolvedCategoryId,
             authorId: 'usr-admin-masud',
             authorName: `দেশরিপোর্ট ডেস্ক (${src.name})`,
             tags: ['সংবাদ', 'অটোমেশন', src.region === 'international' ? 'আন্তর্জাতিক' : 'জাতীয়'],
