@@ -242,6 +242,42 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return cleanArticles;
   });
   const [categories, setCategories] = useState<Category[]>(() => loadLocal('categories', initialCategories));
+
+  // ---- সার্ভার থেকে অটো-সিঙ্ক হওয়া আর্টিকেল টেনে আনা ----
+  // /api/articles থেকে যেসব আর্টিকেল cron job অটোমেটিক পাবলিশ করেছে
+  // (ব্রাউজার বন্ধ থাকলেও), সেগুলো এখানে লোকাল state-এ মার্জ করা হয়।
+  useEffect(() => {
+    let cancelled = false;
+
+    const syncFromServer = async () => {
+      try {
+        const res = await fetch('/api/articles?limit=100');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled || !data.ok || !Array.isArray(data.articles)) return;
+
+        setArticles(prev => {
+          const existingIds = new Set(prev.map((a: Article) => a.id));
+          const existingUrls = new Set(prev.map((a: Article) => a.sourceUrl).filter(Boolean));
+          const freshOnes = data.articles.filter(
+            (a: Article) => !existingIds.has(a.id) && !existingUrls.has(a.sourceUrl)
+          );
+          if (freshOnes.length === 0) return prev;
+          return [...freshOnes, ...prev];
+        });
+      } catch (_) {
+        // নেটওয়ার্ক এরর হলে চুপচাপ ইগনোর — লোকাল ডেটা নিয়েই সাইট চলবে
+      }
+    };
+
+    syncFromServer(); // পেজ লোড হওয়ার সাথে সাথেই একবার
+    const serverSyncInterval = setInterval(syncFromServer, 2 * 60 * 1000); // এরপর প্রতি ২ মিনিটে চেক
+
+    return () => {
+      cancelled = true;
+      clearInterval(serverSyncInterval);
+    };
+  }, []);
   const [breakingNews, setBreakingNews] = useState<BreakingNewsItem[]>(() => {
     const loaded = loadLocal<BreakingNewsItem[]>('breaking', initialBreakingNews);
     const existingIds = new Set((loaded || []).map(b => b.id));
