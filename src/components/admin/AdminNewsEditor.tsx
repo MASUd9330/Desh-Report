@@ -221,7 +221,7 @@ export const AdminNewsEditor: React.FC = () => {
     }
   };
 
-  const handleSave = (saveStatus?: NewsStatus) => {
+  const handleSave = async (saveStatus?: NewsStatus) => {
     setErrorMessage(null);
     if (!title.trim()) {
       setErrorMessage('অনুগ্রহ করে সংবাদের শিরোনাম (Headline) লিখুন।');
@@ -266,17 +266,20 @@ export const AdminNewsEditor: React.FC = () => {
       canonicalUrl: canonicalUrl.trim() || `https://deshreport.vercel.app/article/${targetSlug}`
     };
 
-    if (existingArticle) {
-      updateArticle(existingArticle.id, articleData);
-      setNotification('সংবাদটি সফলভাবে আপডেট করা হয়েছে!');
-      setLastSavedArticle({ id: existingArticle.id, slug: targetSlug, title: title.trim() });
-    } else {
-      const created = addArticle(articleData);
-      setNotification('নতুন সংবাদ সফলভাবে তৈরি ও প্রকাশ করা হয়েছে!');
-      setLastSavedArticle({ id: created.id, slug: targetSlug, title: title.trim() });
-      try {
-        localStorage.removeItem('deshreport_editing_id');
-      } catch (_) {}
+    try {
+      if (existingArticle) {
+        await updateArticle(existingArticle.id, articleData);
+        setNotification('সংবাদটি সফলভাবে আপডেট করা হয়েছে!');
+        setLastSavedArticle({ id: existingArticle.id, slug: targetSlug, title: title.trim() });
+      } else {
+        const created = await addArticle(articleData);
+        setNotification('নতুন সংবাদ সফলভাবে তৈরি ও প্রকাশ করা হয়েছে!');
+        setLastSavedArticle({ id: created.id, slug: created.slug, title: title.trim() });
+        try { localStorage.removeItem('deshreport_editing_id'); } catch (_) {}
+      }
+    } catch (error: any) {
+      setErrorMessage(error?.message || 'সার্ভারে সংবাদটি সংরক্ষণ করা যায়নি।');
+      return;
     }
 
     // Auto-Post to Telegram and Facebook if published

@@ -82,8 +82,8 @@ export const AdminNewsList: React.FC = () => {
     setAdminSection('news', 'add');
   };
 
-  const handleDelete = (articleId: string) => {
-    deleteArticle(articleId);
+  const handleDelete = async (articleId: string) => {
+    try { await deleteArticle(articleId); } catch (error: any) { console.error(error); }
     setConfirmDeleteId(null);
   };
 
@@ -92,7 +92,7 @@ export const AdminNewsList: React.FC = () => {
     if (draftArticles.length === 0) return;
     const count = draftArticles.length;
     draftArticles.forEach(draft => {
-      changeArticleStatus(draft.id, 'published');
+      void changeArticleStatus(draft.id, 'published').catch(error => console.error(error));
     });
     setBatchNotice(`সফল! ${count}টি ড্রাফট সংবাদ একসাথে সাইটে প্রকাশিত (Published) করা হয়েছে!`);
     setTimeout(() => setBatchNotice(null), 4000);
@@ -102,7 +102,7 @@ export const AdminNewsList: React.FC = () => {
   const handlePublishSelected = () => {
     if (selectedIds.length === 0) return;
     selectedIds.forEach(id => {
-      changeArticleStatus(id, 'published');
+      void changeArticleStatus(id, 'published').catch(error => console.error(error));
     });
     const count = selectedIds.length;
     setSelectedIds([]);
@@ -405,7 +405,7 @@ export const AdminNewsList: React.FC = () => {
                     <td className="py-3 px-3 whitespace-nowrap">
                       <select
                         value={art.status}
-                        onChange={e => changeArticleStatus(art.id, e.target.value as NewsStatus)}
+                        onChange={e => { void changeArticleStatus(art.id, e.target.value as NewsStatus).catch(error => console.error(error)); }}
                         className={`text-[11px] font-semibold px-2 py-1 rounded-md border cursor-pointer ${
                           art.status === 'published'
                             ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300'

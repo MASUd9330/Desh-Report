@@ -74,7 +74,7 @@ interface NewsContextType {
   navigateToCategory: (slug: string) => void;
   navigateToPage: (slug: string) => void;
   navigateToAdmin: (section?: string, subSection?: string) => void;
-  loginAdmin: (passwordOrOtp: string, identifier?: string, isOtp?: boolean) => boolean;
+  loginAdmin: (password: string, identifier?: string) => Promise<boolean>;
   logoutAdmin: () => void;
   setSearchOpen: (open: boolean) => void;
   setSearchQuery: (query: string) => void;
@@ -82,10 +82,10 @@ interface NewsContextType {
   toggleDarkMode: () => void;
 
   // Article Actions
-  addArticle: (articleData: Partial<Article>) => Article;
-  updateArticle: (id: string, updates: Partial<Article>) => void;
-  deleteArticle: (id: string) => void;
-  changeArticleStatus: (id: string, status: NewsStatus) => void;
+  addArticle: (articleData: Partial<Article>) => Promise<Article>;
+  updateArticle: (id: string, updates: Partial<Article>) => Promise<void>;
+  deleteArticle: (id: string) => Promise<void>;
+  changeArticleStatus: (id: string, status: NewsStatus) => Promise<void>;
   recordArticleView: (id: string) => void;
 
   // Image Helper Actions
@@ -135,12 +135,12 @@ interface NewsContextType {
   setAutoPostBatchSize: (size: number) => void;
   setAutoPostIntervalMinutes: (minutes: number) => void;
   setRssSyncIntervalMinutes: (minutes: number) => void;
-  addAutomationSource: (src: Partial<AutomationSource>) => void;
-  updateAutomationSource: (id: string, updates: Partial<AutomationSource>) => void;
-  deleteAutomationSource: (id: string) => void;
+  addAutomationSource: (src: Partial<AutomationSource>) => Promise<void>;
+  updateAutomationSource: (id: string, updates: Partial<AutomationSource>) => Promise<void>;
+  deleteAutomationSource: (id: string) => Promise<void>;
   runAutomationFeed: (sourceId: string) => Promise<{ imported: number; duplicates: number }>;
   updateDuplicateRule: (rule: Partial<DuplicateDetectionRule>) => void;
-  updateAutomationSettings: (settings: Partial<AutomationSettings>) => void;
+  updateAutomationSettings: (settings: Partial<AutomationSettings>) => Promise<void>;
 
   // Settings & Pages Actions
   updateSiteSettings: (settings: Partial<SiteSettings>) => void;
@@ -148,6 +148,17 @@ interface NewsContextType {
   exportDatabaseBackup: () => void;
   importDatabaseBackup: (jsonData: string) => boolean;
   resetToDefaults: () => void;
+}
+
+
+async function adminApiRequest(path: string, init: RequestInit = {}): Promise<any> {
+  const headers = new Headers(init.headers || {});
+  if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  const response = await fetch(path, { ...init, headers, credentials: 'include' });
+  let data: any = null;
+  try { data = await response.json(); } catch (_) {}
+  if (!response.ok) throw new Error(data?.error || 'সার্ভার অনুরোধ ব্যর্থ হয়েছে।');
+  return data;
 }
 
 const NewsContext = createContext<NewsContextType | undefined>(undefined);
@@ -336,13 +347,7 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const [users] = useState<User[]>(initialUsers);
   const [currentUser, setCurrentUser] = useState<User>(initialUsers[0]); // Default Tanvir Ahmed (Super Admin)
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
-    try {
-      return sessionStorage.getItem('deshreport_admin_auth') === 'true' || localStorage.getItem('deshreport_admin_auth') === 'true';
-    } catch {
-      return false;
-    }
-  });
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(false);
 
   const [duplicateRule, setDuplicateRule] = useState<DuplicateDetectionRule>({
     enabled: true,
@@ -441,11 +446,7 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const autoPostIntervalMinutesRef = useRef(autoPostIntervalMinutes);
   useEffect(() => { autoPostIntervalMinutesRef.current = autoPostIntervalMinutes; }, [autoPostIntervalMinutes]);
 
-  // Sync state to LocalStorage
-  useEffect(() => {
-    localStorage.setItem('deshreport_articles', JSON.stringify(articles));
-  }, [articles]);
-
+  // Articles and automation configuration are persisted by the authenticated server APIs.
   useEffect(() => {
     localStorage.setItem('deshreport_categories', JSON.stringify(categories));
   }, [categories]);
@@ -688,60 +689,22 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const loginAdmin = (passwordOrOtp: string, identifier?: string, isOtp: boolean = false): boolean => {
-    const trimmedPw = (passwordOrOtp || '').trim();
-    const cleanId = (identifier || '').trim().toLowerCase();
-
-    // Check if identifier is Mohammad Masud Rana
-    const isMasud =
-      !cleanId ||
-      cleanId === 'admin' ||
-      cleanId.includes('masud') ||
-      cleanId === 'masud.here9330@gmail.com' ||
-      cleanId.replace(/\D/g, '').endsWith('1581226134') ||
-      cleanId.replace(/\D/g, '').endsWith('581226134') ||
-      cleanId === '01581226134';
-
-    const validPasswords = ['admin123', 'admin', 'deshreport', 'deshreport2026', '123456', '01581226134', '581226'];
-    const isValid = isOtp || validPasswords.includes(trimmedPw) || trimmedPw.length >= 6;
-
-    if (isValid) {
+  const loginAdmin = async (password: string, identifier?: string): Promise<boolean> => {
+    try {
+      await adminApiRequest('/api/admin/login', { method: 'POST', body: JSON.stringify({ password, identifier: identifier || '' }) });
       setIsAdminAuthenticated(true);
-      try {
-        sessionStorage.setItem('deshreport_admin_auth', 'true');
-        localStorage.setItem('deshreport_admin_auth', 'true');
-      } catch (_) {}
-
-      if (isMasud) {
-        const masudUser: User = users.find(u => u.email.toLowerCase() === 'masud.here9330@gmail.com') || {
-          id: 'usr-admin-masud',
-          name: 'মোহাম্মদ মাসুদ রানা',
-          email: 'masud.here9330@gmail.com',
-          phone: '01581226134',
-          role: 'super_admin',
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
-          title: 'সম্পাদক ও প্রকাশক (Editor & Publisher)',
-          articlesCount: 88,
-          status: 'active'
-        };
-        setCurrentUser(masudUser);
-      } else if (cleanId) {
-        const found = users.find(
-          u => u.email.toLowerCase() === cleanId || (u.phone && u.phone.replace(/\D/g, '').endsWith(cleanId.replace(/\D/g, '')))
-        );
-        if (found) setCurrentUser(found);
-      }
+      try { sessionStorage.setItem('deshreport_admin_auth', 'true'); } catch (_) {}
+      await loadAdminData();
       return true;
+    } catch (_) {
+      return false;
     }
-    return false;
   };
 
   const logoutAdmin = () => {
     setIsAdminAuthenticated(false);
-    try {
-      sessionStorage.removeItem('deshreport_admin_auth');
-      localStorage.removeItem('deshreport_admin_auth');
-    } catch (_) {}
+    try { sessionStorage.removeItem('deshreport_admin_auth'); } catch (_) {}
+    void fetch('/api/admin/login', { method: 'DELETE', credentials: 'include' });
     navigateToHome();
   };
 
@@ -750,152 +713,131 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAdminSubSection(subSection);
   };
 
+  const loadAdminData = async (): Promise<void> => {
+    try {
+      const [articleData, sourceData, settingsData] = await Promise.all([
+        adminApiRequest('/api/admin/articles'),
+        adminApiRequest('/api/admin/sources'),
+        adminApiRequest('/api/admin/settings')
+      ]);
+
+      if (Array.isArray(articleData?.articles)) {
+        if (articleData.articles.length > 0 || articlesRef.current.length === 0) {
+          setArticles(articleData.articles);
+        } else {
+          await adminApiRequest('/api/admin/articles', {
+            method: 'POST',
+            body: JSON.stringify({ articles: articlesRef.current })
+          });
+        }
+      }
+
+      if (Array.isArray(sourceData?.sources)) {
+        if (sourceData.sources.length > 0 || automationSourcesRef.current.length === 0) {
+          setAutomationSources(sourceData.sources);
+        } else {
+          await adminApiRequest('/api/admin/sources', {
+            method: 'POST',
+            body: JSON.stringify({ sources: automationSourcesRef.current })
+          });
+        }
+      }
+
+      if (settingsData?.settings && typeof settingsData.settings === 'object') {
+        setAutomationSettings(prev => ({ ...prev, ...settingsData.settings }));
+      }
+    } catch (error) {
+      console.warn('Admin data hydration failed:', error);
+    }
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    const restoreAdminSession = async () => {
+      try {
+        const response = await fetch('/api/admin/login', { credentials: 'include' });
+        const data = await response.json();
+        if (!cancelled && data?.authenticated) {
+          setIsAdminAuthenticated(true);
+          await loadAdminData();
+        } else if (!cancelled) {
+          setIsAdminAuthenticated(false);
+          try { sessionStorage.removeItem('deshreport_admin_auth'); } catch (_) {}
+        }
+      } catch (_) {
+        if (!cancelled) setIsAdminAuthenticated(false);
+      }
+    };
+    void restoreAdminSession();
+    return () => { cancelled = true; };
+  }, []);
+
   // Article Actions
-  const addArticle = (data: Partial<Article>): Article => {
+  const addArticle = async (data: Partial<Article>): Promise<Article> => {
     const rawTitle = data.title || 'শিরোনামহীন সংবাদ';
     const title = cleanHeadline(rawTitle);
     const slug = data.slug ? generateSlug(data.slug) : generateSlug(title);
     const rawContent = data.content || '';
     const expanded = expandToFullJournalisticArticle(title, data.summary, rawContent, data.categoryId || 'national');
     const readingTime = calculateReadingTime(expanded.content);
-
     const newArticle: Article = {
-      id: 'art-' + Date.now(),
-      title: expanded.title,
-      slug,
-      subtitle: data.subtitle || '',
-      summary: expanded.summary,
-      content: expanded.content,
+      id: 'art-' + Date.now(), title: expanded.title, slug,
+      subtitle: data.subtitle || '', summary: expanded.summary, content: expanded.content,
       featuredImage: data.featuredImage || getExactTopicImage(expanded.title, data.categoryId || 'national') || 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&auto=format&fit=crop&q=80',
-      imageCaption: data.imageCaption || '',
-      imageCredit: data.imageCredit || 'দেশরিপোর্ট',
-      categoryId: data.categoryId || 'national',
-      subcategory: data.subcategory || '',
-      authorId: currentUser.id,
-      authorName: currentUser.name,
-      authorAvatar: currentUser.avatar,
-      tags: data.tags || ['বাংলাদেশ'],
-      source: data.source || 'নিজস্ব প্রতিবেদক',
-      sourceUrl: data.sourceUrl || '',
-      publishedAt: data.publishedAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      readingTimeMinutes: readingTime,
-      viewCount: 1,
-      shareCount: 0,
-      status: data.status || 'published',
-      isFeaturedHero: data.isFeaturedHero || false,
-      isSecondaryHero: data.isSecondaryHero || false,
-      isBreaking: data.isBreaking || false,
-      isTrending: data.isTrending || false,
-      isEditorsChoice: data.isEditorsChoice || false,
-      seoTitle: data.seoTitle || `${expanded.title} | DeshReport`,
-      metaDescription: data.metaDescription || (expanded.summary || expanded.title),
-      focusKeyword: data.focusKeyword || '',
-      canonicalUrl: data.canonicalUrl || `https://deshreport.com/article/${slug}`
+      imageCaption: data.imageCaption || '', imageCredit: data.imageCredit || 'দেশরিপোর্ট',
+      categoryId: data.categoryId || 'national', subcategory: data.subcategory || '',
+      authorId: data.authorId || currentUser.id, authorName: data.authorName || currentUser.name,
+      authorAvatar: data.authorAvatar || currentUser.avatar, tags: data.tags || ['বাংলাদেশ'],
+      source: data.source || 'নিজস্ব প্রতিবেদক', sourceUrl: data.sourceUrl || '',
+      publishedAt: data.publishedAt || new Date().toISOString(), updatedAt: new Date().toISOString(),
+      readingTimeMinutes: readingTime, viewCount: 1, shareCount: 0,
+      status: data.status || 'published', isFeaturedHero: data.isFeaturedHero || false,
+      isSecondaryHero: data.isSecondaryHero || false, isBreaking: data.isBreaking || false,
+      isTrending: data.isTrending || false, isEditorsChoice: data.isEditorsChoice || false,
+      seoTitle: data.seoTitle || expanded.title + ' | DeshReport',
+      metaDescription: data.metaDescription || expanded.summary || expanded.title,
+      focusKeyword: data.focusKeyword || '', canonicalUrl: data.canonicalUrl || 'https://deshreport.com/article/' + slug
     };
-
-    // If marked as Hero, toggle others
-    if (newArticle.isFeaturedHero) {
-      setArticles(prev => prev.map(a => ({ ...a, isFeaturedHero: false })));
+    const response = await adminApiRequest('/api/admin/articles', { method: 'POST', body: JSON.stringify({ article: newArticle }) });
+    const saved = response.article || newArticle;
+    setArticles(prev => [saved, ...prev.map(item => saved.isFeaturedHero ? { ...item, isFeaturedHero: false } : item)]);
+    if (saved.isBreaking) {
+      setBreakingNews(prev => [{ id: 'brk-' + Date.now(), title: saved.title, link: '/article/' + saved.slug, articleId: saved.id, priority: 'urgent', isActive: true, createdAt: new Date().toISOString(), displayLocations: ['homepage', 'category', 'article'] }, ...prev.filter(b => b.articleId !== saved.id)]);
     }
-
-    setArticles(prev => [newArticle, ...prev]);
-    if (newArticle.isBreaking) {
-      setBreakingNews(prev => [
-        {
-          id: 'brk-' + Date.now(),
-          title: newArticle.title,
-          link: `/article/${newArticle.slug}`,
-          articleId: newArticle.id,
-          priority: 'urgent',
-          isActive: true,
-          createdAt: new Date().toISOString(),
-          displayLocations: ['homepage', 'category', 'article']
-        },
-        ...prev.filter(b => b.articleId !== newArticle.id)
-      ]);
+    addActivityLog('সংবাদ প্রকাশ', 'article', saved.title);
+    if (saved.status === 'published') {
+      try { autoPublishArticle(saved); } catch (_) {}
+      try { notifySearchEnginesOfNewArticle(saved); } catch (_) {}
     }
-    addActivityLog('সংবাদ প্রকাশ', 'article', newArticle.title);
-
-    // Auto-Publish to Telegram, Facebook, Pinterest, LinkedIn & WhatsApp if published
-    if (newArticle.status === 'published') {
-      try {
-        autoPublishArticle(newArticle);
-      } catch (_) {}
-      try {
-        notifySearchEnginesOfNewArticle(newArticle);
-      } catch (_) {}
-    }
-
-    return newArticle;
+    return saved;
   };
 
-  const updateArticle = (id: string, updates: Partial<Article>) => {
-    setArticles(prev =>
-      prev.map(item => {
-        if (item.id === id) {
-          const updated = {
-            ...item,
-            ...updates,
-            updatedAt: new Date().toISOString()
-          };
-          if (updates.content) {
-            updated.readingTimeMinutes = calculateReadingTime(updates.content);
-          }
-          return updated;
-        }
-        if (updates.isFeaturedHero && item.id !== id) {
-          return { ...item, isFeaturedHero: false };
-        }
-        return item;
-      })
-    );
-
+  const updateArticle = async (id: string, updates: Partial<Article>): Promise<void> => {
+    const targetArt = articlesRef.current.find(a => a.id === id);
+    if (!targetArt) throw new Error('সংবাদটি পাওয়া যায়নি।');
+    const nextUpdates: Partial<Article> = { ...updates, updatedAt: new Date().toISOString() };
+    if (updates.content) nextUpdates.readingTimeMinutes = calculateReadingTime(updates.content);
+    const response = await adminApiRequest('/api/admin/articles', { method: 'PUT', body: JSON.stringify({ id, updates: nextUpdates }) });
+    const updated = response.article || { ...targetArt, ...nextUpdates };
+    setArticles(prev => prev.map(item => item.id === id ? updated : (updated.isFeaturedHero ? { ...item, isFeaturedHero: false } : item)));
     if (updates.isBreaking !== undefined) {
       if (updates.isBreaking) {
-        const targetArt = articles.find(a => a.id === id);
-        const artTitle = updates.title || targetArt?.title || 'ব্রেকিং নিউজ';
-        const artSlug = updates.slug || targetArt?.slug || '';
-        setBreakingNews(prev => [
-          {
-            id: 'brk-' + Date.now(),
-            title: artTitle,
-            link: `/article/${artSlug}`,
-            articleId: id,
-            priority: 'urgent',
-            isActive: true,
-            createdAt: new Date().toISOString(),
-            displayLocations: ['homepage', 'category', 'article']
-          },
-          ...prev.filter(b => b.articleId !== id)
-        ]);
-      } else {
-        setBreakingNews(prev => prev.filter(b => b.articleId !== id));
-      }
+        setBreakingNews(prev => [{ id: 'brk-' + Date.now(), title: updated.title, link: '/article/' + updated.slug, articleId: id, priority: 'urgent', isActive: true, createdAt: new Date().toISOString(), displayLocations: ['homepage', 'category', 'article'] }, ...prev.filter(b => b.articleId !== id)]);
+      } else setBreakingNews(prev => prev.filter(b => b.articleId !== id));
     }
-
-    addActivityLog('সংবাদ সম্পাদনা', 'article', updates.title || 'সংবাদ');
+    addActivityLog('সংবাদ সম্পাদনা', 'article', updated.title || 'সংবাদ');
   };
 
-  const deleteArticle = (id: string) => {
-    const target = articles.find(a => a.id === id);
+  const deleteArticle = async (id: string): Promise<void> => {
+    const target = articlesRef.current.find(a => a.id === id);
+    await adminApiRequest('/api/admin/articles', { method: 'DELETE', body: JSON.stringify({ id }) });
     setArticles(prev => prev.filter(a => a.id !== id));
     setBreakingNews(prev => prev.filter(b => b.articleId !== id));
-    if (target) {
-      addActivityLog('সংবাদ মুছে ফেলা হয়েছে', 'article', target.title);
-    }
+    if (target) addActivityLog('সংবাদ মুছে ফেলা হয়েছে', 'article', target.title);
   };
 
-  const changeArticleStatus = (id: string, status: NewsStatus) => {
-    setArticles(prev =>
-      prev.map(a => (a.id === id ? { ...a, status, updatedAt: new Date().toISOString() } : a))
-    );
-  };
-
-  const recordArticleView = (id: string) => {
-    setArticles(prev =>
-      prev.map(a => (a.id === id ? { ...a, viewCount: a.viewCount + 1 } : a))
-    );
+  const changeArticleStatus = async (id: string, status: NewsStatus): Promise<void> => {
+    await updateArticle(id, { status, publishedAt: status === 'published' ? new Date().toISOString() : undefined });
   };
 
   // Breaking News State & 15-Minute Auto-Trigger
@@ -1069,33 +1011,26 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Automation
-  const addAutomationSource = (src: Partial<AutomationSource>) => {
+  const addAutomationSource = async (src: Partial<AutomationSource>): Promise<void> => {
     const newSrc: AutomationSource = {
-      id: 'src-' + Date.now(),
-      name: src.name || 'নতুন আরএসএস ফিড',
-      type: src.type || 'rss',
-      url: src.url || 'https://example.com/feed',
-      apiKey: src.apiKey || '',
-      categoryId: src.categoryId || 'national',
-      region: src.region || (src.categoryId === 'international' ? 'international' : 'national'),
-      description: src.description || '',
-      fetchIntervalMinutes: src.fetchIntervalMinutes || 30,
-      status: 'active',
-      autoPublish: src.autoPublish || false,
-      articlesImported: 0,
-      keywordFilters: src.keywordFilters || []
+      id: 'src-' + Date.now(), name: src.name || 'নতুন আরএসএস ফিড', type: src.type || 'rss', url: src.url || 'https://example.com/feed',
+      apiKey: src.apiKey || '', categoryId: src.categoryId || 'national', region: src.region || (src.categoryId === 'international' ? 'international' : 'national'),
+      description: src.description || '', fetchIntervalMinutes: src.fetchIntervalMinutes || 30, status: 'active', autoPublish: src.autoPublish || false,
+      articlesImported: 0, keywordFilters: src.keywordFilters || []
     };
-    setAutomationSources(prev => [...prev, newSrc]);
-    addActivityLog('নতুন অটোমেশন সোর্স যুক্ত', 'automation', newSrc.name);
+    const response = await adminApiRequest('/api/admin/sources', { method: 'POST', body: JSON.stringify({ source: newSrc }) });
+    const saved = response.source || newSrc;
+    setAutomationSources(prev => [...prev, saved]);
+    addActivityLog('নতুন অটোমেশন সোর্স যুক্ত', 'automation', saved.name);
   };
 
-  const updateAutomationSource = (id: string, updates: Partial<AutomationSource>) => {
-    setAutomationSources(prev =>
-      prev.map(s => (s.id === id ? { ...s, ...updates } : s))
-    );
+  const updateAutomationSource = async (id: string, updates: Partial<AutomationSource>): Promise<void> => {
+    const response = await adminApiRequest('/api/admin/sources', { method: 'PUT', body: JSON.stringify({ id, updates }) });
+    setAutomationSources(prev => prev.map(s => s.id === id ? (response.source || { ...s, ...updates }) : s));
   };
 
-  const deleteAutomationSource = (id: string) => {
+  const deleteAutomationSource = async (id: string): Promise<void> => {
+    await adminApiRequest('/api/admin/sources', { method: 'DELETE', body: JSON.stringify({ id }) });
     setAutomationSources(prev => prev.filter(s => s.id !== id));
   };
 
@@ -1103,26 +1038,12 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setDuplicateRule(prev => ({ ...prev, ...rule }));
   };
 
-  const updateAutomationSettings = (settings: Partial<AutomationSettings>) => {
-    setAutomationSettings(prev => {
-      const next = { ...prev, ...settings };
-      try {
-        localStorage.setItem('deshreport_automation_settings', JSON.stringify(next));
-      } catch (_) {}
-      return next;
-    });
-    if (settings.similarityThreshold !== undefined) {
-      setDuplicateRule(prev => ({
-        ...prev,
-        similarityThreshold: settings.similarityThreshold! / 100
-      }));
-    }
-    if (settings.checkSourceUrl !== undefined) {
-      setDuplicateRule(prev => ({
-        ...prev,
-        checkSourceUrl: settings.checkSourceUrl!
-      }));
-    }
+  const updateAutomationSettings = async (settings: Partial<AutomationSettings>): Promise<void> => {
+    const next = { ...automationSettings, ...settings };
+    const response = await adminApiRequest('/api/admin/settings', { method: 'PUT', body: JSON.stringify({ settings: next }) });
+    setAutomationSettings(response.settings || next);
+    if (settings.similarityThreshold !== undefined) setDuplicateRule(prev => ({ ...prev, similarityThreshold: settings.similarityThreshold! / 100 }));
+    if (settings.checkSourceUrl !== undefined) setDuplicateRule(prev => ({ ...prev, checkSourceUrl: settings.checkSourceUrl! }));
   };
 
   // Real RSS / Feed Fetch with multi-proxy XML DOMParser + dynamic fresh news guarantee & social dispatch
@@ -1366,6 +1287,7 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const sortedDrafts = [...drafts].reverse();
     const toPublish = sortedDrafts.slice(0, countToPublish);
     const publishIds = new Set(toPublish.map(p => p.id));
+    toPublish.forEach(p => { void updateArticle(p.id, { status: 'published', publishedAt: new Date().toISOString() }); });
 
     setArticles(prev =>
       prev.map(art => {
