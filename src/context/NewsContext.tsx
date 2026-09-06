@@ -840,6 +840,10 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await updateArticle(id, { status, publishedAt: status === 'published' ? new Date().toISOString() : undefined });
   };
 
+  const recordArticleView = (id: string) => {
+    setArticles(prev => prev.map(article => article.id === id ? { ...article, viewCount: (article.viewCount || 0) + 1 } : article));
+  };
+
   // Breaking News State & 15-Minute Auto-Trigger
   const [breakingAutoTriggerEnabled, setBreakingAutoTriggerEnabled] = useState<boolean>(() =>
     loadLocal('breaking_auto_trigger_enabled', true)
