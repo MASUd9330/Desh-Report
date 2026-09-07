@@ -251,19 +251,31 @@ async function fetchFeed(url: string): Promise<string> {
 // ---- ছোট শিরোনাম/সংক্ষিপ্তসার থেকে পূর্ণ আর্টিকেল বানানো (সরল ভার্সন) ----
 type GeminiRewrite = { title: string; summary: string; content: string };
 
+function getGeminiApiKeys(): string[] {
+  const numbered = ['GEMINI_API_KEY_1', 'GEMINI_API_KEY_2', 'GEMINI_API_KEY_3', 'GEMINI_API_KEY_4', 'GEMINI_API_KEY_5']
+    .map(name => process.env[name]?.trim() || '');
+  const listed = (process.env.GEMINI_API_KEYS || '').split(/[,\n]/).map(value => value.trim());
+  return [process.env.GEMINI_API_KEY?.trim() || '', ...numbered, ...listed].filter((key, index, all) => key && all.indexOf(key) === index);
+}
+
+let geminiKeyCursor = 0;
+
 function toParagraphHtml(value: string): string {
   return cleanHtml(value).split(/\n\s*\n|\n/).map(part => cleanHtml(part)).filter(Boolean).map(part => `<p>${part}</p>`).join('\n');
 }
 
 async function rewriteWithGemini(title: string, description: string, sourceName: string): Promise<GeminiRewrite | null> {
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
-  if (!apiKey) return null;
+  const keys = getGeminiApiKeys();
+  if (keys.length === 0) return null;
 
   const prompt = [
-    'তুমি একজন দায়িত্বশীল বাংলা সংবাদ সম্পাদক। নিচের RSS তথ্যের ভিত্তিতে একটি মৌলিক বাংলা সংবাদ প্রতিবেদন তৈরি করো।',
-    'শুধু দেওয়া তথ্য ব্যবহার করবে; কোনো নাম, সংখ্যা, উদ্ধৃতি, স্থান, তারিখ বা ঘটনা বানাবে না। তথ্য কম থাকলে সীমিতভাবে লিখবে।',
-    'RSS বাক্য হুবহু কপি করবে না। শিরোনাম নির্ভুল ও সংক্ষিপ্ত রাখবে।',
-    'প্রতিবেদনটি ২৫০-৪০০ বাংলা শব্দের হবে এবং content-এ শুধু plain text paragraph থাকবে, HTML নয়।',
+    'তুমি একজন দায়িত্বশীল বাংলা সংবাদ সম্পাদক। নিচের RSS তথ্যের ভিত্তিতে একটি মৌলিক, পাঠকবান্ধব বাংলা সংবাদ প্রতিবেদন তৈরি করো।',
+    'লক্ষ্য: একজন পাঠক যেন প্রতিবেদনটি পড়ে একবারেই বুঝতে পারেন কী ঘটেছে, কারা জড়িত, কোথায় ও কখন ঘটেছে, কেন বা কীভাবে ঘটেছে, এবং এর প্রভাব বা পরবর্তী পদক্ষেপ কী।',
+    'প্রথম অনুচ্ছেদে মূল ঘটনা ও সবচেয়ে গুরুত্বপূর্ণ তথ্য দাও। পরের অনুচ্ছেদগুলোতে প্রাসঙ্গিক পটভূমি, নিশ্চিত তথ্য, প্রভাব এবং জানা থাকলে পরবর্তী পদক্ষেপ সাজিয়ে দাও।',
+    'সাধারণত ৩৫০-৫৫০ বাংলা শব্দে ৫-৮টি স্বাভাবিক অনুচ্ছেদ লেখো। RSS তথ্য খুব সংক্ষিপ্ত হলে ১৮০-৩০০ শব্দেই থামবে; শুধু দৈর্ঘ্য পূরণ করতে কিছু বানাবে না।',
+    'শুধু দেওয়া RSS তথ্য ব্যবহার করবে; কোনো নাম, সংখ্যা, উদ্ধৃতি, স্থান, তারিখ, কারণ বা ঘটনা অনুমান করে যোগ করবে না। নিশ্চিত নয় এমন তথ্যকে নিশ্চিত হিসেবে লিখবে না।',
+    'RSS বাক্য হুবহু কপি করবে না, কিন্তু তথ্যের অর্থ বদলাবে না। শিরোনাম নির্ভুল, সংক্ষিপ্ত এবং clickbait-মুক্ত রাখবে।',
+    'content-এ শুধু plain text paragraph থাকবে, HTML নয়। শেষে মতামত, প্রচারণা বা কৃত্রিম filler যোগ করবে না।',
     'শুধু valid JSON দেবে এই structure-এ: {\"title\":\"...\",\"summary\":\"...\",\"content\":\"...\"}',
     '',
     'মূল RSS শিরোনাম: ' + title,
@@ -271,29 +283,38 @@ async function rewriteWithGemini(title: string, description: string, sourceName:
     'সূত্র: ' + sourceName
   ].join('\n');
 
-  try {
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(process.env.GEMINI_MODEL || 'gemini-2.0-flash') + ':generateContent?key=' + encodeURIComponent(apiKey), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.2, maxOutputTokens: 1400, responseMimeType: 'application/json' }
-      })
-    });
-    if (!response.ok) throw new Error('Gemini API failed: ' + response.status);
-    const data = await response.json();
-    const raw = data?.candidates?.[0]?.content?.parts?.map((part: any) => part.text || '').join('').trim();
-    if (!raw) return null;
-    const jsonText = raw.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
-    const parsed = JSON.parse(jsonText);
-    const rewrittenTitle = cleanHeadline(String(parsed.title || ''));
-    const summary = cleanHtml(String(parsed.summary || '')).slice(0, 280);
-    const content = toParagraphHtml(String(parsed.content || ''));
-    if (rewrittenTitle.length < 8 || summary.length < 20 || content.length < 80) return null;
-    return { title: rewrittenTitle, summary, content };
-  } catch (_) {
-    return null;
+  for (let offset = 0; offset < keys.length; offset++) {
+    const keyIndex = (geminiKeyCursor + offset) % keys.length;
+    const apiKey = keys[keyIndex];
+    try {
+      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(process.env.GEMINI_MODEL || 'gemini-2.0-flash') + ':generateContent?key=' + encodeURIComponent(apiKey), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.15, maxOutputTokens: 2200, responseMimeType: 'application/json' }
+        })
+      });
+      if (!response.ok) {
+        if (response.status === 400 || response.status === 404) return null;
+        geminiKeyCursor = (keyIndex + 1) % keys.length; continue;
+      }
+      const data = await response.json();
+      const raw = data?.candidates?.[0]?.content?.parts?.map((part: any) => part.text || '').join('').trim();
+      if (!raw) return null;
+      const jsonText = raw.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
+      const parsed = JSON.parse(jsonText);
+      const rewrittenTitle = cleanHeadline(String(parsed.title || ''));
+      const summary = cleanHtml(String(parsed.summary || '')).slice(0, 320);
+      const content = toParagraphHtml(String(parsed.content || ''));
+      if (rewrittenTitle.length < 8 || summary.length < 30 || content.length < 180) return null;
+      geminiKeyCursor = keyIndex;
+      return { title: rewrittenTitle, summary, content };
+    } catch (_) {
+      geminiKeyCursor = (keyIndex + 1) % keys.length;
+    }
   }
+  return null;
 }
 function buildArticleContent(title: string, description: string, sourceName: string): { summary: string; content: string } {
   const cleanDesc = description && description.length > 40 ? description : `${title} সম্পর্কিত সর্বশেষ তথ্য সংগ্রহ করা হয়েছে।`;
@@ -441,10 +462,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    if (!process.env.GEMINI_API_KEY) {
-      log.push('Gemini rewrite skipped: GEMINI_API_KEY সেট করা নেই');
+    if (getGeminiApiKeys().length === 0) {
+      log.push('Gemini rewrite skipped: কোনো GEMINI_API_KEY সেট করা নেই');
     } else {
-      log.push(`Gemini rewrite: ${aiRewritesUsed}টি সফল, ${aiRewriteFailures}টি fallback (সর্বোচ্চ ${MAX_AI_REWRITES_PER_RUN}টি চেষ্টা)`);
+      log.push(`Gemini rewrite: ${aiRewritesUsed}টি সফল, ${aiRewriteFailures}টি fallback (সর্বোচ্চ ${MAX_AI_REWRITES_PER_RUN}টি চেষ্টা; ${getGeminiApiKeys().length}টি key available)`);
     }
 
     res.status(200).json({
