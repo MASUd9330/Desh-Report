@@ -11,6 +11,7 @@ const ARTICLES_KEY = 'deshreport:articles';
 const SOURCES_KEY = 'deshreport:automation_sources';
 const MAX_STORED_ARTICLES = 500;
 const MAX_ITEMS_PER_FEED = 5;
+const MAX_AI_REWRITES_PER_RUN = 10;
 
 // ---- KV হেল্পার ----
 async function kvGet<T>(key: string): Promise<T | null> {
@@ -248,6 +249,52 @@ async function fetchFeed(url: string): Promise<string> {
 }
 
 // ---- ছোট শিরোনাম/সংক্ষিপ্তসার থেকে পূর্ণ আর্টিকেল বানানো (সরল ভার্সন) ----
+type GeminiRewrite = { title: string; summary: string; content: string };
+
+function toParagraphHtml(value: string): string {
+  return cleanHtml(value).split(/\n\s*\n|\n/).map(part => cleanHtml(part)).filter(Boolean).map(part => `<p>${part}</p>`).join('\n');
+}
+
+async function rewriteWithGemini(title: string, description: string, sourceName: string): Promise<GeminiRewrite | null> {
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  if (!apiKey) return null;
+
+  const prompt = [
+    'তুমি একজন দায়িত্বশীল বাংলা সংবাদ সম্পাদক। নিচের RSS তথ্যের ভিত্তিতে একটি মৌলিক বাংলা সংবাদ প্রতিবেদন তৈরি করো।',
+    'শুধু দেওয়া তথ্য ব্যবহার করবে; কোনো নাম, সংখ্যা, উদ্ধৃতি, স্থান, তারিখ বা ঘটনা বানাবে না। তথ্য কম থাকলে সীমিতভাবে লিখবে।',
+    'RSS বাক্য হুবহু কপি করবে না। শিরোনাম নির্ভুল ও সংক্ষিপ্ত রাখবে।',
+    'প্রতিবেদনটি ২৫০-৪০০ বাংলা শব্দের হবে এবং content-এ শুধু plain text paragraph থাকবে, HTML নয়।',
+    'শুধু valid JSON দেবে এই structure-এ: {\"title\":\"...\",\"summary\":\"...\",\"content\":\"...\"}',
+    '',
+    'মূল RSS শিরোনাম: ' + title,
+    'RSS বিবরণ: ' + (description || 'বিবরণ দেওয়া হয়নি'),
+    'সূত্র: ' + sourceName
+  ].join('\n');
+
+  try {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(process.env.GEMINI_MODEL || 'gemini-2.0-flash') + ':generateContent?key=' + encodeURIComponent(apiKey), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 1400, responseMimeType: 'application/json' }
+      })
+    });
+    if (!response.ok) throw new Error('Gemini API failed: ' + response.status);
+    const data = await response.json();
+    const raw = data?.candidates?.[0]?.content?.parts?.map((part: any) => part.text || '').join('').trim();
+    if (!raw) return null;
+    const jsonText = raw.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
+    const parsed = JSON.parse(jsonText);
+    const rewrittenTitle = cleanHeadline(String(parsed.title || ''));
+    const summary = cleanHtml(String(parsed.summary || '')).slice(0, 280);
+    const content = toParagraphHtml(String(parsed.content || ''));
+    if (rewrittenTitle.length < 8 || summary.length < 20 || content.length < 80) return null;
+    return { title: rewrittenTitle, summary, content };
+  } catch (_) {
+    return null;
+  }
+}
 function buildArticleContent(title: string, description: string, sourceName: string): { summary: string; content: string } {
   const cleanDesc = description && description.length > 40 ? description : `${title} সম্পর্কিত সর্বশেষ তথ্য সংগ্রহ করা হয়েছে।`;
   const summary = cleanDesc.slice(0, 200);
@@ -285,6 +332,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const existingTitles = new Set(existingArticles.map(a => a.title.trim().toLowerCase()));
 
     const newArticles: StoredArticle[] = [];
+    let aiRewriteAttempts = 0;
+    let aiRewritesUsed = 0;
+    let aiRewriteFailures = 0;
 
     for (const src of sources) {
       try {
@@ -299,14 +349,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             continue;
           }
 
-          const { summary, content } = buildArticleContent(cleanTitle, item.description, src.name);
-          const resolvedCategoryId = categorizeArticle(cleanTitle, item.description, src.categoryId);
-          const resolvedImage = item.image && item.image.startsWith('http') ? item.image : topicImage(cleanTitle, resolvedCategoryId);
+          let articleTitle = cleanTitle;
+          let { summary, content } = buildArticleContent(cleanTitle, item.description, src.name);
+          if (process.env.GEMINI_API_KEY && aiRewriteAttempts < MAX_AI_REWRITES_PER_RUN) {
+            aiRewriteAttempts++;
+            const rewritten = await rewriteWithGemini(cleanTitle, item.description, src.name);
+            if (rewritten) {
+              articleTitle = rewritten.title;
+              summary = rewritten.summary;
+              content = rewritten.content;
+              aiRewritesUsed++;
+            } else {
+              aiRewriteFailures++;
+            }
+          }
+          const resolvedCategoryId = categorizeArticle(articleTitle, item.description, src.categoryId);
+          const resolvedImage = item.image && item.image.startsWith('http') ? item.image : topicImage(articleTitle, resolvedCategoryId);
 
           const article: StoredArticle = {
             id: 'art-auto-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
-            title: cleanTitle,
-            slug: generateSlug(cleanTitle) + '-' + Math.floor(Math.random() * 10000),
+            title: articleTitle,
+            slug: generateSlug(articleTitle) + '-' + Math.floor(Math.random() * 10000),
             summary,
             content,
             featuredImage: resolvedImage,
@@ -378,11 +441,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
+    if (!process.env.GEMINI_API_KEY) {
+      log.push('Gemini rewrite skipped: GEMINI_API_KEY সেট করা নেই');
+    } else {
+      log.push(`Gemini rewrite: ${aiRewritesUsed}টি সফল, ${aiRewriteFailures}টি fallback (সর্বোচ্চ ${MAX_AI_REWRITES_PER_RUN}টি চেষ্টা)`);
+    }
+
     res.status(200).json({
       ok: true,
       startedAt,
       finishedAt: new Date().toISOString(),
       totalNewArticles: newArticles.length,
+      aiRewritesUsed,
+      aiRewriteFailures,
       log
     });
   } catch (err: any) {
