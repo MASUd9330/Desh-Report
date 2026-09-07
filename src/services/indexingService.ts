@@ -30,7 +30,7 @@ export const getStoredIndexingConfig = (): IndexingConfig => {
   return {
     autoIndexEnabled: true,
     indexNowApiKey: 'deshreport' + Math.random().toString(36).substring(2, 10),
-    indexNowHost: typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'deshreport.com',
+    indexNowHost: typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'desh-report.vercel.app',
     googleSearchConsoleVerified: false,
     googleSiteVerificationTag: ''
   };
@@ -72,7 +72,7 @@ export const getBaseSiteUrl = (): string => {
   if (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost')) {
     return window.location.origin;
   }
-  return 'https://deshreport.com';
+  return 'https://desh-report.vercel.app';
 };
 
 /**
@@ -80,7 +80,7 @@ export const getBaseSiteUrl = (): string => {
  */
 export const pingIndexNow = async (urls: string[]): Promise<boolean> => {
   const config = getStoredIndexingConfig();
-  const host = typeof window !== 'undefined' ? window.location.hostname : 'deshreport.com';
+  const host = typeof window !== 'undefined' ? window.location.hostname : 'desh-report.vercel.app';
   const timestamp = new Date().toLocaleTimeString('bn-BD');
 
   try {
@@ -90,7 +90,7 @@ export const pingIndexNow = async (urls: string[]): Promise<boolean> => {
         'Content-Type': 'application/json; charset=utf-8'
       },
       body: JSON.stringify({
-        host: host.includes('localhost') ? 'deshreport.com' : host,
+        host: host.includes('localhost') ? 'desh-report.vercel.app' : host,
         key: config.indexNowApiKey,
         keyLocation: `${getBaseSiteUrl()}/${config.indexNowApiKey}.txt`,
         urlList: urls
