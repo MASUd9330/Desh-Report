@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Homepage -->
   <url>
-    <loc>https://deshreport.netlify.app/</loc>
+    <loc>https://desh-report.vercel.app/</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>always</changefreq>
     <priority>1.0</priority>
@@ -10,91 +10,91 @@
 
   <!-- News Categories -->
   <url>
-    <loc>https://deshreport.netlify.app/category/national</loc>
+    <loc>https://desh-report.vercel.app/category/national</loc>
     <changefreq>hourly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/category/politics</loc>
+    <loc>https://desh-report.vercel.app/category/politics</loc>
     <changefreq>hourly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/category/economy</loc>
+    <loc>https://desh-report.vercel.app/category/economy</loc>
     <changefreq>hourly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/category/international</loc>
+    <loc>https://desh-report.vercel.app/category/international</loc>
     <changefreq>hourly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/category/sports</loc>
+    <loc>https://desh-report.vercel.app/category/sports</loc>
     <changefreq>hourly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/category/entertainment</loc>
+    <loc>https://desh-report.vercel.app/category/entertainment</loc>
     <changefreq>hourly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/category/technology</loc>
+    <loc>https://desh-report.vercel.app/category/technology</loc>
     <changefreq>hourly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/category/health</loc>
+    <loc>https://desh-report.vercel.app/category/health</loc>
     <changefreq>daily</changefreq>
     <priority>0.75</priority>
   </url>
 
   <!-- Published News Articles -->
   <url>
-    <loc>https://deshreport.netlify.app/article/dhaka-metro-rail-kamalapur-extension-timeline</loc>
+    <loc>https://desh-report.vercel.app/article/dhaka-metro-rail-kamalapur-extension-timeline</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/article/commerce-ministry-taskforce-commodity-price-ramadan</loc>
+    <loc>https://desh-report.vercel.app/article/commerce-ministry-taskforce-commodity-price-ramadan</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/article/bangladeshi-engineers-ai-healthcare-global-breakthrough</loc>
+    <loc>https://desh-report.vercel.app/article/bangladeshi-engineers-ai-healthcare-global-breakthrough</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/article/election-reform-commission-draft-finalized</loc>
+    <loc>https://desh-report.vercel.app/article/election-reform-commission-draft-finalized</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/article/bangladesh-champions-trophy-cricket-preparations</loc>
+    <loc>https://desh-report.vercel.app/article/bangladesh-champions-trophy-cricket-preparations</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/article/un-security-council-permanent-ceasefire-gaza</loc>
+    <loc>https://desh-report.vercel.app/article/un-security-council-permanent-ceasefire-gaza</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/article/sonar-bangla-movie-ott-release-review</loc>
+    <loc>https://desh-report.vercel.app/article/sonar-bangla-movie-ott-release-review</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/article/health-lifestyle-seasonal-change-wellness-tips</loc>
+    <loc>https://desh-report.vercel.app/article/health-lifestyle-seasonal-change-wellness-tips</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
@@ -102,43 +102,43 @@
 
   <!-- Institutional & Policy Pages -->
   <url>
-    <loc>https://deshreport.netlify.app/about.html</loc>
+    <loc>https://desh-report.vercel.app/about.html</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.70</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/editorial-policy.html</loc>
+    <loc>https://desh-report.vercel.app/editorial-policy.html</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.70</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/corrections-policy.html</loc>
+    <loc>https://desh-report.vercel.app/corrections-policy.html</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.70</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/privacy-policy.html</loc>
+    <loc>https://desh-report.vercel.app/privacy-policy.html</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.70</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/terms-of-use.html</loc>
+    <loc>https://desh-report.vercel.app/terms-of-use.html</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.70</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/contact.html</loc>
+    <loc>https://desh-report.vercel.app/contact.html</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.70</priority>
   </url>
   <url>
-    <loc>https://deshreport.netlify.app/sitemap.html</loc>
+    <loc>https://desh-report.vercel.app/sitemap.html</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.70</priority>
