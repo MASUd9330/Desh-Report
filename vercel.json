@@ -9,11 +9,16 @@
     { "source": "/editorial-policy", "destination": "/editorial-policy.html" },
     { "source": "/privacy-policy", "destination": "/privacy-policy.html" },
     { "source": "/terms-of-use", "destination": "/terms-of-use.html" },
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    { "source": "/sitemap-news.xml", "destination": "/api/sitemap-news" },
     { "source": "/sitemap", "destination": "/sitemap.html" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/((?!assets/|.*\\..*).*)", "destination": "/index.html" }
   ],
+  "functions": {
+    "api/sync.ts": { "maxDuration": 60 }
+  },
   "crons": [
-    { "path": "/api/cron/sync", "schedule": "0 6 * * *" }
+    { "path": "/api/sync", "schedule": "0 6 * * *" }
   ]
 }

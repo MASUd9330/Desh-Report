@@ -248,6 +248,25 @@ async function fetchFeed(url: string): Promise<string> {
   return res.text();
 }
 
+// ---- মূল আর্টিকেলের নিজস্ব ছবি (og:image) টেনে আনা — এক্স্যাক্ট কনটেন্ট-ম্যাচিং ইমেজের জন্য ----
+async function fetchOgImage(articleUrl: string): Promise<string | null> {
+  try {
+    const res = await fetch(articleUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; DeshReportBot/1.0)' },
+      signal: AbortSignal.timeout(4000)
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const ogMatch =
+      html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    if (ogMatch && ogMatch[1] && ogMatch[1].startsWith('http')) return ogMatch[1];
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 // ---- ছোট শিরোনাম/সংক্ষিপ্তসার থেকে পূর্ণ আর্টিকেল বানানো (সরল ভার্সন) ----
 type GeminiRewrite = { title: string; summary: string; content: string };
 
@@ -385,7 +404,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
           }
           const resolvedCategoryId = categorizeArticle(articleTitle, item.description, src.categoryId);
-          const resolvedImage = item.image && item.image.startsWith('http') ? item.image : topicImage(articleTitle, resolvedCategoryId);
+          let resolvedImage = item.image && item.image.startsWith('http') ? item.image : null;
+          if (!resolvedImage) {
+            resolvedImage = await fetchOgImage(item.link);
+          }
+          if (!resolvedImage) {
+            resolvedImage = topicImage(articleTitle, resolvedCategoryId);
+          }
 
           const article: StoredArticle = {
             id: 'art-auto-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
