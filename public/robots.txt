@@ -3,5 +3,5 @@ Allow: /
 Disallow: /admin/
 Disallow: /api/
 
-Sitemap: https://deshreport.netlify.app/sitemap.xml
-Sitemap: https://deshreport.netlify.app/sitemap-news.xml
+Sitemap: https://desh-report.vercel.app/sitemap.xml
+Sitemap: https://desh-report.vercel.app/sitemap-news.xml
