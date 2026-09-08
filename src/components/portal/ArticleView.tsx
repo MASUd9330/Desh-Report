@@ -153,7 +153,18 @@ export const ArticleView: React.FC = () => {
                 <span className="font-bold text-gray-900 dark:text-white block text-sm">
                   {article.authorName}
                 </span>
-                <span className="text-[11px] text-gray-500">{article.source || 'নিজস্ব প্রতিবেদক'}</span>
+                {article.sourceUrl ? (
+                  <a
+                    href={article.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    className="text-[11px] text-red-600 hover:underline"
+                  >
+                    মূল সংবাদ দেখুন — {article.source || 'সূত্র'}
+                  </a>
+                ) : (
+                  <span className="text-[11px] text-gray-500">{article.source || 'নিজস্ব প্রতিবেদক'}</span>
+                )}
               </div>
             </div>
 

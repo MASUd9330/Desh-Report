@@ -280,7 +280,7 @@ function getGeminiApiKeys(): string[] {
 let geminiKeyCursor = 0;
 
 function toParagraphHtml(value: string): string {
-  return cleanHtml(value).split(/\n\s*\n|\n/).map(part => cleanHtml(part)).filter(Boolean).map(part => `<p>${part}</p>`).join('\n');
+  return cleanHtml(value).split(/\n\s*\n|\n/).map(part => cleanHtml(part)).filter(Boolean).join('\n\n');
 }
 
 async function rewriteWithGemini(title: string, description: string, sourceName: string): Promise<GeminiRewrite | null> {
@@ -339,9 +339,11 @@ function buildArticleContent(title: string, description: string, sourceName: str
   const cleanDesc = description && description.length > 40 ? description : `${title} সম্পর্কিত সর্বশেষ তথ্য সংগ্রহ করা হয়েছে।`;
   const summary = cleanDesc.slice(0, 200);
 
-  const content = `<p>${cleanDesc}</p>
-<p>${title} বিষয়ে বিস্তারিত তথ্যের জন্য মূল সূত্র (${sourceName}) অনুসরণ করা হচ্ছে এবং প্রয়োজনীয় হালনাগাদ পাওয়ামাত্র পাঠকদের জানানো হবে।</p>
-<p>দেশরিপোর্ট সবসময় নির্ভরযোগ্য ও সময়োপযোগী সংবাদ পরিবেশনে প্রতিশ্রুতিবদ্ধ। এই প্রতিবেদনটি স্বয়ংক্রিয় সংবাদ সংগ্রহ ব্যবস্থার মাধ্যমে প্রকাশিত হয়েছে।</p>`;
+  const content = `${cleanDesc}
+
+${title} বিষয়ে বিস্তারিত তথ্যের জন্য মূল সূত্র (${sourceName}) অনুসরণ করা হচ্ছে এবং প্রয়োজনীয় হালনাগাদ পাওয়ামাত্র পাঠকদের জানানো হবে।
+
+দেশরিপোর্ট সবসময় নির্ভরযোগ্য ও সময়োপযোগী সংবাদ পরিবেশনে প্রতিশ্রুতিবদ্ধ। এই প্রতিবেদনটি স্বয়ংক্রিয় সংবাদ সংগ্রহ ব্যবস্থার মাধ্যমে প্রকাশিত হয়েছে।`;
 
   return { summary, content };
 }
@@ -410,11 +412,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
           if (!resolvedImage) {
             resolvedImage = topicImage(articleTitle, resolvedCategoryId);
-          }
-
-          // মূল সূত্রের লিংক সহ "আরও পড়ুন" যোগ করা — পাঠক চাইলে মূল প্রতিবেদনে গিয়ে দেখতে পারবেন
-          if (item.link) {
-            content += `\n<p class="source-attribution">আরও পড়ুন: <a href="${item.link}" target="_blank" rel="noopener noreferrer nofollow">${src.name}</a></p>`;
           }
 
           const article: StoredArticle = {
