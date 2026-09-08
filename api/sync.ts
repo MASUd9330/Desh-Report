@@ -368,6 +368,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       log.push('পুরনো সব আর্টিকেল রিসেট করা হয়েছে');
     }
 
+    // ?cleanup=1 দিলে পুরনো আর্টিকেল মুছে ফেলা হয় না — শুধু content-এর ভেতরের
+    // literal <p>...</p> ট্যাগ সরিয়ে প্লেইন-টেক্সট প্যারাগ্রাফে (frontend যা আশা করে) রূপান্তর করা হয়
+    if (req.query.cleanup === '1') {
+      const toClean = (await kvGet<StoredArticle[]>(ARTICLES_KEY)) || [];
+      let cleanedCount = 0;
+      const cleaned = toClean.map(a => {
+        if (a.content && /<p[\s>]/i.test(a.content)) {
+          cleanedCount++;
+          const plain = a.content
+            .replace(/<\/p>\s*<p[^>]*>/gi, '\n\n')
+            .replace(/<p[^>]*>/gi, '')
+            .replace(/<\/p>/gi, '')
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<[^>]+>/g, '')
+            .trim();
+          return { ...a, content: plain };
+        }
+        return a;
+      });
+      await kvSet(ARTICLES_KEY, cleaned);
+      log.push(`${cleanedCount}টি পুরনো আর্টিকেলের HTML ট্যাগ পরিষ্কার করা হয়েছে (মোট ${cleaned.length}টির মধ্যে)`);
+    }
+
     const sources = (await kvGet<FeedSource[]>(SOURCES_KEY)) || DEFAULT_SOURCES;
     const existingArticles = req.query.reset === '1' ? [] : (await kvGet<StoredArticle[]>(ARTICLES_KEY)) || [];
     const existingUrls = new Set(existingArticles.map(a => a.sourceUrl));
