@@ -134,10 +134,10 @@ const URL_CATEGORY_PATTERNS: Array<[RegExp, string]> = [
   [/\/(business)\//i, 'business'],
   [/\/corporate-corner\//i, 'business'],
   [/\/(economy|economics)\//i, 'economy'],
-  [/\/international\//i, 'international'],
+  [/\/(international|world)\//i, 'international'],
   [/\/politics\//i, 'politics'],
   [/\/(health|prescription)\//i, 'health'],
-  [/\/(lifestyle|art-literature|feature)\//i, 'lifestyle'],
+  [/\/(lifestyle|art-literature|feature|religion)\//i, 'lifestyle'],
   [/\/(national|bangladesh|country|campus|law-crime)\//i, 'national']
 ];
 
