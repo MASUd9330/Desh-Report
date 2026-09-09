@@ -88,9 +88,9 @@ interface FeedSource {
 const DEFAULT_SOURCES: FeedSource[] = [
   { id: 'src-1', name: 'Prothom Alo Top Feed (প্রথম আলো)', url: 'https://www.prothomalo.com/feed', categoryId: 'national', region: 'national', autoPublish: true },
   { id: 'src-2', name: 'BSS News RSS Feed (বাসস জাতীয় বার্তা সংস্থা)', url: 'https://www.bssnews.net/feed/rss', categoryId: 'national', region: 'national', autoPublish: true },
-  { id: 'src-3', name: 'bdnews24.com Bangla (বিডিনিউজ২৪.কম)', url: 'https://bangla.bdnews24.com/feed', categoryId: 'politics', region: 'national', autoPublish: true },
+  { id: 'src-3', name: 'Jago News 24 (জাগো নিউজ)', url: 'https://www.jagonews24.com/rss/rss.xml', categoryId: 'national', region: 'national', autoPublish: true },
   { id: 'src-4', name: 'BBC News Bangla (বিবিসি বাংলা আরএসএস)', url: 'https://feeds.bbci.co.uk/bengali/rss.xml', categoryId: 'international', region: 'international', autoPublish: true },
-  { id: 'src-5', name: 'Daily Jugantor (দৈনিক যুগান্তর)', url: 'https://www.jugantor.com/feed/rss.xml', categoryId: 'economy', region: 'national', autoPublish: true },
+  { id: 'src-5', name: 'RisingBD (রাইজিংবিডি)', url: 'https://www.risingbd.com/rss/rss.xml', categoryId: 'national', region: 'national', autoPublish: true },
   { id: 'src-6', name: 'DW Bangla (ডয়েচে ভেলে বাংলা)', url: 'https://rss.dw.com/rdf/rss-ben-all', categoryId: 'technology', region: 'international', autoPublish: true }
 ];
 
@@ -125,6 +125,29 @@ const CATEGORY_KEYWORDS: Record<string, string[]> = {
   international: ['যুক্তরাষ্ট্র', 'চীন', 'ভারত', 'পাকিস্তান', 'ইসরায়েল', 'ইরান', 'রাশিয়া', 'ইউক্রেন', 'জাতিসংঘ', 'আন্তর্জাতিক', 'বিশ্ব', 'গাজা', 'ফিলিস্তিন', 'যুদ্ধ'],
   politics: ['নির্বাচন', 'সংসদ', 'রাজনীতি', 'মন্ত্রী', 'সরকার', 'বিরোধী দল', 'রাষ্ট্রপতি', 'প্রধানমন্ত্রী', 'দল', 'আওয়ামী লীগ', 'বিএনপি', 'জামায়াত']
 };
+
+// ---- লিংকের পাথ দেখে ক্যাটাগরি বের করা (jagonews24/risingbd এর URL-এ ক্যাটাগরি লেখা থাকে, এটা কীওয়ার্ডের চেয়ে বেশি নির্ভরযোগ্য) ----
+const URL_CATEGORY_PATTERNS: Array<[RegExp, string]> = [
+  [/\/sports?\//i, 'sports'],
+  [/\/entertainment\//i, 'entertainment'],
+  [/\/technology\//i, 'technology'],
+  [/\/(business)\//i, 'business'],
+  [/\/corporate-corner\//i, 'business'],
+  [/\/(economy|economics)\//i, 'economy'],
+  [/\/international\//i, 'international'],
+  [/\/politics\//i, 'politics'],
+  [/\/(health|prescription)\//i, 'health'],
+  [/\/(lifestyle|art-literature|feature)\//i, 'lifestyle'],
+  [/\/(national|bangladesh|country|campus|law-crime)\//i, 'national']
+];
+
+function categorizeFromUrl(link: string): string | null {
+  if (!link) return null;
+  for (const [pattern, catId] of URL_CATEGORY_PATTERNS) {
+    if (pattern.test(link)) return catId;
+  }
+  return null;
+}
 
 function categorizeArticle(title: string, description: string, fallbackCategoryId: string): string {
   const text = `${title} ${description}`;
@@ -228,8 +251,12 @@ function parseRssItemsServer(xml: string): Array<{ title: string; link: string; 
     }
     if (!link) link = cleanHtml(extractTag(block, 'guid'));
 
+    const rawContentEncoded = extractTag(block, 'content:encoded').replace(
+      /<div class="multi-read-box"[\s\S]*?<\/a>\s*<\/div>/gi,
+      ' '
+    );
     const description =
-      cleanHtml(extractTag(block, 'content:encoded')) ||
+      cleanHtml(rawContentEncoded) ||
       cleanHtml(extractTag(block, 'description')) ||
       cleanHtml(extractTag(block, 'summary'));
 
@@ -428,7 +455,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               aiRewriteFailures++;
             }
           }
-          const resolvedCategoryId = categorizeArticle(articleTitle, item.description, src.categoryId);
+          const resolvedCategoryId = categorizeFromUrl(item.link) || categorizeArticle(articleTitle, item.description, src.categoryId);
           let resolvedImage = item.image && item.image.startsWith('http') ? item.image : null;
           if (!resolvedImage) {
             resolvedImage = await fetchOgImage(item.link);
