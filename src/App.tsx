@@ -170,7 +170,9 @@ const PortalView: React.FC = () => {
             </div>
 
             {/* NEW SECTION 2: Multimedia & Video Hub (ভিডিও ও মাল্টিমিডিয়া সংবাদ) */}
-            <VideoSection />
+            {/* আপাতত বন্ধ রাখা হলো — এটাতে কোনো real/automation-চালিত ডেটা নেই, শুধু স্ট্যাটিক ডেমো কার্ড ছিল।
+                সত্যিকারের ভিডিও RSS/YouTube ইন্টিগ্রেশন যোগ হলে এটা আবার চালু করা যাবে। */}
+            {/* <VideoSection /> */}
 
             {/* In-feed Midpage Ad */}
             <div className="my-6">
@@ -185,7 +187,8 @@ const PortalView: React.FC = () => {
             </div>
 
             {/* NEW SECTION 3: Editorial & Opinion Desk (সম্পাদকীয় ও বিশিষ্ট মতামত) */}
-            <OpinionSection />
+            {/* আপাতত বন্ধ রাখা হলো — এটাতেও কোনো real কনটেন্ট সোর্স নেই, স্ট্যাটিক ডেমো ছিল। */}
+            {/* <OpinionSection /> */}
 
             {/* 4. Main Portal Grid 3: Entertainment, Tech, Lifestyle */}
             {thirdBatchCategories.length > 0 && (
