@@ -113,6 +113,8 @@ interface StoredArticle {
   viewCount: number;
   shareCount: number;
   status: 'published' | 'draft';
+  isBreaking?: boolean;
+  isTrending?: boolean;
 }
 
 // ---- খবরের শিরোনাম/সারাংশ পড়ে সঠিক ক্যাটাগরি বের করা (RSS ফিডের ফিক্সড ক্যাটাগরির বদলে) ----
@@ -498,7 +500,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (newArticles.length > 0) {
-      const combined = [...newArticles, ...existingArticles].slice(0, MAX_STORED_ARTICLES);
+      // ৬ ঘণ্টার বেশি পুরনো আর্টিকেল থেকে ব্রেকিং ট্যাগ সরিয়ে ফেলা (টিকার সবসময় সাম্প্রতিক রাখতে)
+      const sixHoursAgo = Date.now() - 6 * 60 * 60 * 1000;
+      const refreshedExisting = existingArticles.map(a =>
+        a.isBreaking && new Date(a.publishedAt).getTime() < sixHoursAgo
+          ? { ...a, isBreaking: false }
+          : a
+      );
+
+      // এই সাইকেলে যা নতুন এলো তার মধ্যে সবচেয়ে নতুন ১-৩টা পাবলিশড আর্টিকেলকে ব্রেকিং/ট্রেন্ডিং ট্যাগ দেওয়া
+      const publishedInThisRun = newArticles.filter(a => a.status === 'published');
+      const breakingIds = new Set(publishedInThisRun.slice(0, 1).map(a => a.id));
+      const trendingIds = new Set(publishedInThisRun.slice(0, 3).map(a => a.id));
+      const taggedNewArticles = newArticles.map(a => ({
+        ...a,
+        isBreaking: breakingIds.has(a.id),
+        isTrending: trendingIds.has(a.id)
+      }));
+
+      const combined = [...taggedNewArticles, ...refreshedExisting].slice(0, MAX_STORED_ARTICLES);
       await kvSet(ARTICLES_KEY, combined);
 
       const publishedNew = newArticles.filter(a => a.status === 'published');
