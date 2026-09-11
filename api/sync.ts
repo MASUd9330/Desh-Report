@@ -9,7 +9,7 @@ const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 const ARTICLES_KEY = 'deshreport:articles';
 const SOURCES_KEY = 'deshreport:automation_sources';
-const MAX_STORED_ARTICLES = 500;
+const MAX_STORED_ARTICLES = 5000; // SEO-এর স্বার্থে বেশিদিন রাখা — দ্রুত ডিলিট URL হারায়/৪০৪ তৈরি করে, যা গুগলের জন্য ক্ষতিকর
 const MAX_ITEMS_PER_FEED = 10;
 const MAX_AI_REWRITES_PER_RUN = 10;
 

@@ -98,7 +98,7 @@ async function kvSet(key: string, value: unknown): Promise<void> {
 
 
 const ARTICLES_KEY = 'deshreport:articles';
-const MAX_STORED_ARTICLES = 500;
+const MAX_STORED_ARTICLES = 5000; // SEO-এর স্বার্থে বেশিদিন রাখা — sync.ts এর সাথে সামঞ্জস্যপূর্ণ
 
 function readBody(req: VercelRequest): Record<string, any> {
   if (!req.body) return {};
