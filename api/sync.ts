@@ -420,6 +420,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       log.push(`${cleanedCount}টি পুরনো আর্টিকেলের HTML ট্যাগ পরিষ্কার করা হয়েছে (মোট ${cleaned.length}টির মধ্যে)`);
     }
 
+    // ?resetSources=1 দিলে Redis-এ আগে থেকে সেভ থাকা পুরনো সোর্স লিস্ট মুছে নতুন DEFAULT_SOURCES বসবে
+    // (কোড আপডেট করলেও Redis-এ সেভ পুরনো তালিকা override করে দিত, এটা তার সমাধান)
+    if (req.query.resetSources === '1') {
+      await kvSet(SOURCES_KEY, DEFAULT_SOURCES);
+      log.push(`সোর্স লিস্ট রিফ্রেশ করা হয়েছে (${DEFAULT_SOURCES.map(s => s.name).join(', ')})`);
+    }
+
     const sources = (await kvGet<FeedSource[]>(SOURCES_KEY)) || DEFAULT_SOURCES;
     const existingArticles = req.query.reset === '1' ? [] : (await kvGet<StoredArticle[]>(ARTICLES_KEY)) || [];
     const existingUrls = new Set(existingArticles.map(a => a.sourceUrl));
