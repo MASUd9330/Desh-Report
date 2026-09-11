@@ -10,7 +10,7 @@ const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 const ARTICLES_KEY = 'deshreport:articles';
 const SOURCES_KEY = 'deshreport:automation_sources';
 const MAX_STORED_ARTICLES = 500;
-const MAX_ITEMS_PER_FEED = 5;
+const MAX_ITEMS_PER_FEED = 10;
 const MAX_AI_REWRITES_PER_RUN = 10;
 
 // ---- KV হেল্পার ----
