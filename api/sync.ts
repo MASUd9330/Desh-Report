@@ -271,7 +271,7 @@ function parseRssItemsServer(xml: string): Array<{ title: string; link: string; 
 async function fetchFeed(url: string): Promise<string> {
   const res = await fetch(url, {
     headers: { 'User-Agent': 'Mozilla/5.0 (compatible; DeshReportBot/1.0)' },
-    signal: AbortSignal.timeout(8000)
+    signal: AbortSignal.timeout(15000)
   });
   if (!res.ok) throw new Error(`Feed fetch failed (${res.status}): ${url}`);
   return res.text();
@@ -496,8 +496,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         log.push(`${src.name}: ${importedFromThisFeed}টি নতুন সংগ্রহ`);
       } catch (feedErr: any) {
         log.push(`${src.name}: ব্যর্থ (${feedErr.message})`);
+        console.error(`[sync] feed failed: ${src.name} (${src.url}) -> ${feedErr.message}`);
       }
     }
+
+    console.log('[sync] run summary:', JSON.stringify(log));
 
     if (newArticles.length > 0) {
       // ৬ ঘণ্টার বেশি পুরনো আর্টিকেল থেকে ব্রেকিং ট্যাগ সরিয়ে ফেলা (টিকার সবসময় সাম্প্রতিক রাখতে)
