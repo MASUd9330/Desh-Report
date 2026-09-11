@@ -91,7 +91,7 @@ const PortalView: React.FC = () => {
                 ))}
 
                 {/* NEW SECTION 1: Regional & District News (সারাদেশ ও ৬৪ জেলার সংবাদ) */}
-                <RegionalSection />
+                {/* <RegionalSection /> — আপাতত বন্ধ, শুধু hardcoded ডেমো জেলা-সংবাদ ছিল, কোনো real ডেটা সোর্স নেই */}
               </div>
 
               {/* Sidebar 4 Columns */}
@@ -200,7 +200,7 @@ const PortalView: React.FC = () => {
             )}
 
             {/* NEW SECTION 4: Photojournalism Gallery (ছবিতে বাংলাদেশ) */}
-            <PhotoStorySection />
+            {/* <PhotoStorySection /> — আপাতত বন্ধ, ভুল/অসঙ্গত স্টক ছবি দেখাচ্ছিল, কোনো real ফটো সোর্স নেই */}
           </div>
         )}
       </main>
