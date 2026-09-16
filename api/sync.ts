@@ -39,6 +39,62 @@ async function kvSet(key: string, value: unknown): Promise<void> {
   if (!res.ok) throw new Error(`KV SET failed: ${res.status}`);
 }
 
+async function kvDelete(key: string): Promise<void> {
+  if (!KV_URL || !KV_TOKEN) return;
+  await fetch(`${KV_URL}/del/${encodeURIComponent(key)}`, {
+    headers: { Authorization: `Bearer ${KV_TOKEN}` }
+  }).catch(() => {});
+}
+
+// ---- আর্টিকেল সংরক্ষণ ছোট ছোট ভাগে (chunks) করা হয় ----
+// কারণ: সব আর্টিকেল একটামাত্র বড় JSON-এ রাখলে Upstash-এর max request size (10MB)
+// ছাড়িয়ে যায় এবং পুরো সিস্টেম "KV SET failed: 413" দিয়ে বন্ধ হয়ে যায়।
+// প্রতিটা ভাগে সর্বোচ্চ ৩০০টা আর্টিকেল রাখা হয়, তাই আর্টিকেল যতই বাড়ুক এই সমস্যা আর হবে না।
+const ARTICLES_META_KEY = `${ARTICLES_KEY}:meta`;
+const CHUNK_SIZE = 300;
+
+function articleChunkKey(index: number): string {
+  return `${ARTICLES_KEY}:chunk:${index}`;
+}
+
+async function kvGetAllArticles<T>(): Promise<T[]> {
+  const meta = await kvGet<{ chunkCount: number }>(ARTICLES_META_KEY);
+  const chunkCount = meta?.chunkCount || 0;
+
+  if (chunkCount === 0) {
+    // এখনো chunk-এ মাইগ্রেট না হলে পুরনো (legacy) একক-কী স্টোরেজ থেকে পড়া
+    const legacy = await kvGet<T[]>(ARTICLES_KEY);
+    return legacy || [];
+  }
+
+  const chunkPromises = Array.from({ length: chunkCount }, (_, i) => kvGet<T[]>(articleChunkKey(i)));
+  const chunks = await Promise.all(chunkPromises);
+  return chunks.flatMap(c => c || []);
+}
+
+async function kvSaveAllArticles(articles: unknown[]): Promise<void> {
+  const chunks: unknown[][] = [];
+  for (let i = 0; i < articles.length; i += CHUNK_SIZE) {
+    chunks.push(articles.slice(i, i + CHUNK_SIZE));
+  }
+  if (chunks.length === 0) chunks.push([]);
+
+  await Promise.all(chunks.map((chunk, i) => kvSet(articleChunkKey(i), chunk)));
+
+  // আগে যত chunk ছিল, এখন তার চেয়ে কম লাগলে অতিরিক্ত পুরনো chunk মুছে ফেলা
+  const prevMeta = await kvGet<{ chunkCount: number }>(ARTICLES_META_KEY);
+  const prevCount = prevMeta?.chunkCount || 0;
+  if (prevCount > chunks.length) {
+    await Promise.all(
+      Array.from({ length: prevCount - chunks.length }, (_, i) => kvDelete(articleChunkKey(chunks.length + i)))
+    );
+  }
+
+  await kvSet(ARTICLES_META_KEY, { chunkCount: chunks.length });
+  // মাইগ্রেশনের পর পুরনো একক-কী স্টোরেজ খালি করে দেওয়া (একবারই দরকার, ক্ষতি নেই থাকলেও)
+  await kvDelete(ARTICLES_KEY).catch(() => {});
+}
+
 // ---- ছোট টেক্সট হেল্পার ----
 function cleanHtml(input: string): string {
   if (!input) return '';
@@ -393,14 +449,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // ?reset=1 দিলে আগের সব আর্টিকেল মুছে নতুন করে শুরু হবে
     // (পুরনো ভুল ক্যাটাগরি/ছবি-ওয়ালা আর্টিকেলগুলো সরিয়ে ফেলতে একবার ব্যবহার করো)
     if (req.query.reset === '1') {
-      await kvSet(ARTICLES_KEY, []);
+      await kvSaveAllArticles([]);
       log.push('পুরনো সব আর্টিকেল রিসেট করা হয়েছে');
     }
 
     // ?cleanup=1 দিলে পুরনো আর্টিকেল মুছে ফেলা হয় না — শুধু content-এর ভেতরের
     // literal <p>...</p> ট্যাগ সরিয়ে প্লেইন-টেক্সট প্যারাগ্রাফে (frontend যা আশা করে) রূপান্তর করা হয়
     if (req.query.cleanup === '1') {
-      const toClean = (await kvGet<StoredArticle[]>(ARTICLES_KEY)) || [];
+      const toClean = await kvGetAllArticles<StoredArticle>();
       let cleanedCount = 0;
       const cleaned = toClean.map(a => {
         if (a.content && /<p[\s>]/i.test(a.content)) {
@@ -416,7 +472,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
         return a;
       });
-      await kvSet(ARTICLES_KEY, cleaned);
+      await kvSaveAllArticles(cleaned);
       log.push(`${cleanedCount}টি পুরনো আর্টিকেলের HTML ট্যাগ পরিষ্কার করা হয়েছে (মোট ${cleaned.length}টির মধ্যে)`);
     }
 
@@ -428,7 +484,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const sources = (await kvGet<FeedSource[]>(SOURCES_KEY)) || DEFAULT_SOURCES;
-    const existingArticles = req.query.reset === '1' ? [] : (await kvGet<StoredArticle[]>(ARTICLES_KEY)) || [];
+    const existingArticles = req.query.reset === '1' ? [] : await kvGetAllArticles<StoredArticle>();
     const existingUrls = new Set(existingArticles.map(a => a.sourceUrl));
     const existingTitles = new Set(existingArticles.map(a => a.title.trim().toLowerCase()));
 
@@ -529,7 +585,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }));
 
       const combined = [...taggedNewArticles, ...refreshedExisting].slice(0, MAX_STORED_ARTICLES);
-      await kvSet(ARTICLES_KEY, combined);
+      await kvSaveAllArticles(combined);
 
       const publishedNew = newArticles.filter(a => a.status === 'published');
       if (publishedNew.length > 0) {

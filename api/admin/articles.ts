@@ -96,9 +96,48 @@ async function kvSet(key: string, value: unknown): Promise<void> {
   if (!response.ok) throw new Error('KV SET failed: ' + response.status);
 }
 
+async function kvDelete(key: string): Promise<void> {
+  const { url, token } = kvConfig();
+  await fetch(url + '/del/' + encodeURIComponent(key), {
+    headers: { Authorization: 'Bearer ' + token }
+  }).catch(() => {});
+}
 
 const ARTICLES_KEY = 'deshreport:articles';
+const ARTICLES_META_KEY = ARTICLES_KEY + ':meta';
+const CHUNK_SIZE = 300;
 const MAX_STORED_ARTICLES = 5000; // SEO-এর স্বার্থে বেশিদিন রাখা — sync.ts এর সাথে সামঞ্জস্যপূর্ণ
+
+function articleChunkKey(index: number): string {
+  return ARTICLES_KEY + ':chunk:' + index;
+}
+
+// আর্টিকেল ছোট ছোট chunk-এ রাখা হয় (Upstash-এর 10MB সিঙ্গেল-রিকোয়েস্ট লিমিটের কারণে,
+// sync.ts এর সাথে একই storage scheme — নাহলে একটা আরেকটার ডেটা override করে ফেলবে)
+async function kvGetAllArticles(): Promise<Record<string, any>[]> {
+  const meta = await kvGet<{ chunkCount: number }>(ARTICLES_META_KEY);
+  const chunkCount = meta?.chunkCount || 0;
+  if (chunkCount === 0) {
+    const legacy = await kvGet<Record<string, any>[]>(ARTICLES_KEY);
+    return legacy || [];
+  }
+  const chunks = await Promise.all(Array.from({ length: chunkCount }, (_, i) => kvGet<Record<string, any>[]>(articleChunkKey(i))));
+  return chunks.flatMap(c => c || []);
+}
+
+async function kvSaveAllArticles(articles: Record<string, any>[]): Promise<void> {
+  const chunks: Record<string, any>[][] = [];
+  for (let i = 0; i < articles.length; i += CHUNK_SIZE) chunks.push(articles.slice(i, i + CHUNK_SIZE));
+  if (chunks.length === 0) chunks.push([]);
+  await Promise.all(chunks.map((chunk, i) => kvSet(articleChunkKey(i), chunk)));
+  const prevMeta = await kvGet<{ chunkCount: number }>(ARTICLES_META_KEY);
+  const prevCount = prevMeta?.chunkCount || 0;
+  if (prevCount > chunks.length) {
+    await Promise.all(Array.from({ length: prevCount - chunks.length }, (_, i) => kvDelete(articleChunkKey(chunks.length + i))));
+  }
+  await kvSet(ARTICLES_META_KEY, { chunkCount: chunks.length });
+  await kvDelete(ARTICLES_KEY).catch(() => {});
+}
 
 function readBody(req: VercelRequest): Record<string, any> {
   if (!req.body) return {};
@@ -137,7 +176,7 @@ function normalizeArticle(input: Record<string, any>, existing?: Record<string, 
 }
 
 async function getArticles(): Promise<Record<string, any>[]> {
-  return (await kvGet<Record<string, any>[]>(ARTICLES_KEY)) || [];
+  return await kvGetAllArticles();
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -160,7 +199,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const byId = new Map<string, Record<string, any>>();
         [...incoming, ...current].forEach(item => { if (!byId.has(item.id)) byId.set(item.id, item); });
         const articles = Array.from(byId.values()).slice(0, MAX_STORED_ARTICLES);
-        await kvSet(ARTICLES_KEY, articles);
+        await kvSaveAllArticles(articles);
         res.status(200).json({ ok: true, count: articles.length, articles });
         return;
       }
@@ -172,7 +211,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return;
       }
       const articles = [article, ...current.filter(item => item.id !== article.id)].slice(0, MAX_STORED_ARTICLES);
-      await kvSet(ARTICLES_KEY, articles);
+      await kvSaveAllArticles(articles);
       res.status(201).json({ ok: true, article });
       return;
     }
@@ -188,7 +227,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const article = normalizeArticle({ ...updates, id }, current[index]);
       let articles = current.map(item => item.id === id ? article : item);
       if (article.isFeaturedHero) articles = articles.map(item => item.id === id ? item : { ...item, isFeaturedHero: false });
-      await kvSet(ARTICLES_KEY, articles);
+      await kvSaveAllArticles(articles);
       res.status(200).json({ ok: true, article });
       return;
     }
@@ -198,7 +237,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!id) { res.status(400).json({ ok: false, error: 'id প্রয়োজন।' }); return; }
       const articles = current.filter(item => item.id !== id);
       if (articles.length === current.length) { res.status(404).json({ ok: false, error: 'সংবাদটি পাওয়া যায়নি।' }); return; }
-      await kvSet(ARTICLES_KEY, articles);
+      await kvSaveAllArticles(articles);
       res.status(200).json({ ok: true, id });
       return;
     }

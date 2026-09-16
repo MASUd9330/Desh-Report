@@ -7,6 +7,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 const ARTICLES_KEY = 'deshreport:articles';
+const ARTICLES_META_KEY = `${ARTICLES_KEY}:meta`;
 
 async function kvGet<T>(key: string): Promise<T | null> {
   if (!KV_URL || !KV_TOKEN) {
@@ -25,12 +26,32 @@ async function kvGet<T>(key: string): Promise<T | null> {
   }
 }
 
+function articleChunkKey(index: number): string {
+  return `${ARTICLES_KEY}:chunk:${index}`;
+}
+
+// আর্টিকেল এখন ছোট ছোট chunk-এ ভাগ করে রাখা হয় (Upstash-এর 10MB সিঙ্গেল-রিকোয়েস্ট লিমিট এড়াতে)
+async function kvGetAllArticles<T>(): Promise<T[]> {
+  const meta = await kvGet<{ chunkCount: number }>(ARTICLES_META_KEY);
+  const chunkCount = meta?.chunkCount || 0;
+
+  if (chunkCount === 0) {
+    // এখনো chunk-এ মাইগ্রেট না হলে পুরনো (legacy) একক-কী স্টোরেজ থেকে পড়া
+    const legacy = await kvGet<T[]>(ARTICLES_KEY);
+    return legacy || [];
+  }
+
+  const chunkPromises = Array.from({ length: chunkCount }, (_, i) => kvGet<T[]>(articleChunkKey(i)));
+  const chunks = await Promise.all(chunkPromises);
+  return chunks.flatMap(c => c || []);
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
 
   try {
-    const articles = (await kvGet<any[]>(ARTICLES_KEY)) || [];
+    const articles = await kvGetAllArticles<any>();
     let result = articles.filter(a => a.status === 'published');
 
     const category = req.query.category as string | undefined;
